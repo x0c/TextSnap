@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>LSUIElement</key>
+	<true/>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>zh-Hans</string>
+	</array>
+	<key>NSScreenCaptureUsageDescription</key>
+	<string>TextSnap 需要录制屏幕来框选你指定的区域并识别其中的文字。TextSnap needs screen recording to capture the region you select and recognize its text.</string>
+</dict>
+</plist>

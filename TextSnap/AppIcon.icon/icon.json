@@ -1,0 +1,32 @@
+{
+  "fill" : {
+    "radial-gradient" : {
+      "center" : [ 0.5, 0.5 ],
+      "colors" : [
+        "extended-srgb:0.19608,0.43137,1.00000,1.00000",
+        "extended-srgb:0.03137,0.06275,0.25098,1.00000"
+      ]
+    }
+  },
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "image-name" : "viewfinder-text",
+          "name" : "Viewfinder with text"
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "squares" : "shared"
+  }
+}
