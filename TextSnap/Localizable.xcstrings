@@ -466,13 +466,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "First capture asks once in a system dialog. If denied, open settings here, allow TextSnap, then come back."
+            "value": "First capture asks once in a system dialog. If denied, allow TextSnap here and come back — it works right away. If you turned the switch off and back on, relaunch TextSnap first."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "首次识别会弹一次系统授权窗。若拒绝，在此打开设置允许 TextSnap，再回来即可。"
+            "value": "首次识别会弹一次系统授权窗。若拒绝，在此允许 TextSnap 后回来即刻可用。若曾关闭后重新打开开关，需先重启 TextSnap。"
           }
         }
       }
@@ -796,6 +796,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "这块区域里没有可读文字。换一块更大、字更清晰的区域。"
+          }
+        }
+      }
+    },
+    "intent.capture.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture Screen Text"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "识别屏幕文字"
+          }
+        }
+      }
+    },
+    "intent.capture.description": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture a screen region and copy its text to the clipboard."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "框选一块屏幕区域，把其中的文字拷入剪贴板。"
           }
         }
       }

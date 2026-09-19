@@ -28,9 +28,18 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
             self.window = window
         }
 
+        // Clamp the (possibly autosaved) frame into the visible screen: display
+        // changes must never strand the window off-screen. No orderFrontRegardless:
+        // returning from System Settings must not yank this window over it.
+        if let window, let visible = NSScreen.main?.visibleFrame {
+            var frame = window.frame
+            frame.origin.x = min(max(frame.origin.x, visible.minX), max(visible.minX, visible.maxX - frame.width))
+            frame.origin.y = min(max(frame.origin.y, visible.minY), max(visible.minY, visible.maxY - frame.height))
+            window.setFrame(frame, display: false)
+        }
+
         activationSession.beginIfAccessory()
         window?.makeKeyAndOrderFront(nil)
-        window?.orderFrontRegardless()
     }
 
     func windowWillClose(_ notification: Notification) {

@@ -9,7 +9,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private(set) static weak var shared: AppDelegate?
 
     private var statusItemController: StatusItemController?
-    private var commaMonitor: Any?
     private var becomeActiveObserver: Any?
     private var readyAt = Date()
     private let appUpdater = AppUpdater()
@@ -44,15 +43,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         #if DEBUG
         NSLog("[TextSnap] hotkey registered: %@", HotkeyManager.shared.shortcut?.displayName ?? "none")
         #endif
-
-        commaMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            let command = event.modifierFlags.intersection(.deviceIndependentFlagsMask).contains(.command)
-            if command, event.charactersIgnoringModifiers == "," {
-                SettingsWindowController.shared.show()
-                return nil
-            }
-            return event
-        }
 
         becomeActiveObserver = NotificationCenter.default.addObserver(
             forName: NSApplication.didBecomeActiveNotification,
@@ -91,9 +81,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         HotkeyManager.shared.unregister()
-        if let commaMonitor {
-            NSEvent.removeMonitor(commaMonitor)
-        }
         if let becomeActiveObserver {
             NotificationCenter.default.removeObserver(becomeActiveObserver)
         }

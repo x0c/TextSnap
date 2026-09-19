@@ -1,9 +1,12 @@
+import AppKit
+import Combine
 import SwiftUI
 
 struct SettingsView: View {
     @ObservedObject private var hotkeyManager = HotkeyManager.shared
     @Bindable private var launchAtLogin = LaunchAtLoginManager.shared
     @Bindable private var engine = CaptureEngine.shared
+    @State private var permissionGranted = ScreenCapturePermission.isGranted
 
     var body: some View {
         Form {
@@ -18,6 +21,11 @@ struct SettingsView: View {
         .padding(.bottom, 8)
         .focusEffectDisabled()
         .onAppear {
+            permissionGranted = ScreenCapturePermission.isGranted
+            launchAtLogin.refresh()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            permissionGranted = ScreenCapturePermission.isGranted
             launchAtLogin.refresh()
         }
         .onDisappear {
@@ -66,14 +74,14 @@ struct SettingsView: View {
 
     private var permissionSection: some View {
         Section(String(localized: "settings.permission.section")) {
-            Button(ScreenCapturePermission.isGranted
+            Button(permissionGranted
                 ? String(localized: "settings.permission.granted")
                 : String(localized: "settings.permission.openSettings")) {
                     ScreenCapturePermission.openSystemSettings()
                 }
                 .focusEffectDisabled()
-                .disabled(ScreenCapturePermission.isGranted)
-            if !ScreenCapturePermission.isGranted {
+                .disabled(permissionGranted)
+            if !permissionGranted {
                 Text(String(localized: "settings.permission.hint"))
                     .font(.caption)
                     .foregroundStyle(.secondary)

@@ -218,7 +218,8 @@ final class HotkeyManager: ObservableObject {
 
     private func isReservedBySystem(_ shortcut: Shortcut) -> Bool {
         let command = UInt32(cmdKey)
-        let systemKeys: Set<UInt32> = [
+        let shift = UInt32(shiftKey)
+        let commandOnlyKeys: Set<UInt32> = [
             UInt32(kVK_Space),
             UInt32(kVK_Tab),
             UInt32(kVK_ANSI_Q),
@@ -227,6 +228,16 @@ final class HotkeyManager: ObservableObject {
             UInt32(kVK_ANSI_M),
             UInt32(kVK_ANSI_Grave),
         ]
-        return shortcut.modifiers == command && systemKeys.contains(shortcut.keyCode)
+        if shortcut.modifiers == command, commandOnlyKeys.contains(shortcut.keyCode) {
+            return true
+        }
+        // System screenshot family.
+        let screenshotKeys: Set<UInt32> = [
+            UInt32(kVK_ANSI_3),
+            UInt32(kVK_ANSI_4),
+            UInt32(kVK_ANSI_5),
+            UInt32(kVK_ANSI_6),
+        ]
+        return shortcut.modifiers == (command | shift) && screenshotKeys.contains(shortcut.keyCode)
     }
 }

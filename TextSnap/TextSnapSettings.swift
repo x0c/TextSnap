@@ -77,6 +77,7 @@ final class TextSnapSettings {
     private func persist() {
         let dir = fileURL.deletingLastPathComponent()
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        try? FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: dir.path)
         let file = File(
             hotkeyKeyCode: hotkeyKeyCode.map { Int($0) },
             hotkeyModifiers: hotkeyModifiers.map { Int($0) },
@@ -84,5 +85,6 @@ final class TextSnapSettings {
         )
         guard let data = try? JSONEncoder().encode(file) else { return }
         try? data.write(to: fileURL, options: .atomic)
+        try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: fileURL.path)
     }
 }
