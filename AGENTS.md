@@ -24,13 +24,17 @@ Remote：`app-macos` → Forgejo 私有 `Max/TextSnap`。本产品文件夹不�
 - 左键立即框选；右键菜单；不提供隐藏菜单栏图标。
 - 开机自启默认关；检查更新走「没有公开更新源」。
 
-## 基线豁免
+## 基线豁免（2026-09-19 复核，c6c2341 落地后）
 
 - **A1** 应用内自更新 / 对外 dmg：纯自用、不对外分发；仍须签名。
-- **A2** 隐私清单：不收集、不上报用户数据。
-- **B3** 账号登录：无账号。**B5** App Intents：没有要交给快捷指令的动作。**B7** 离线优先：无网络业务数据。
+- **A2** 隐私清单：不收集、不上报用户数据。C1 不做（无日志导出；崩溃走系统报告），C3 不做（无遥测）。
+- **B3** 账号登录：无账号。**B7** 离线优先：无网络业务数据。
+- **A7**：`.icon` 分层与扁平 `appiconset` 已并存（`ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon` + `AppIcon.icon` 资源），产物含 `AppIcon.icns` + `Assets.car`；2026-09-19 起按 P1（下次动图标时迁分层生效链路）。
+- **B5 已过，不再豁免**：`CaptureTextIntent`（框选→本机识字→进剪贴板）已暴露给快捷指令 / Spotlight；`AppIntent.metadata` 随包产物。
 
-**下列不是豁免，必须过：** A3 中英、A4 无蓝框、A5 窗口记忆、A7 图标与菜单栏模板、A8 版本双轨、B1 开机自启默认关、B2 可改快捷键、B4 设置窗、B6 权限最小化与拒绝降级。
+**下列不是豁免，必须过：** A3 中英、A4 无蓝框、A5 窗口记忆与标准菜单（⌘, 走系统 Settings 场景经 `.appSettings` 转到单设置窗）、A8 版本双轨（以 xcconfig 为准，project.yml 不再双写）、A9（`~/.config/textsnap/`，目录 700 / 文件 600）、B1 开机自启默认关、B2 可改快捷键（⌘⇧3/4/5/6 截图系预留）、B4 设置窗、B6 权限最小化与拒绝降级（回前台重检；首次授权即刻用 / 开关重开需重启）。
+
+A6 无障碍审计尚未执行：下次改设置窗时补 Accessibility Inspector 一遍。
 
 ## 明确不做
 
@@ -48,6 +52,9 @@ Remote：`app-macos` → Forgejo 私有 `Max/TextSnap`。本产品文件夹不�
 - [app-macos/docs/PRODUCT_CONTRACT.md](/Users/geraltgraham/Codes/TextSnap/app-macos/docs/PRODUCT_CONTRACT.md)：改、评审或排查任何用户可见行为前**必读**。
 - [Swift 规范](/Users/geraltgraham/Codes/_standards/swift.md)：新建、评审或改造本 macOS 应用前**必读**。
 - [macos-app-baseline](/Users/geraltgraham/Codes/_standards/workspace-docs/swift-docs/macos-app-baseline.md)：评审本应用完整度、补分发/开机自启/快捷键/设置窗前**必读**。
+- [macOS 应用开发：菜单栏、生命周期与后台服务](~/.config/agentsync/docs/MACOS_APP_DEVELOPMENT_GUIDE.md)：改、评审或排查菜单栏、登录静默、二次启动防呆、右键与设置对等前**必读**。
+- [桌面应用配置落点](~/.config/agentsync/docs/DESKTOP_APP_CONFIG_LOCATION_GUIDE.md)：改、评审或排查配置 / 日志 / 缓存落盘前**必读**。
+- [macOS 系统授权](/Users/geraltgraham/Codes/_standards/workspace-docs/swift-docs/macos-system-permissions.md)：改、评审或排查屏幕录制授权与拒绝降级前**必读**。
 
 <!-- managed:inherited-agents:end -->
 
