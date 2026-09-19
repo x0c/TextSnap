@@ -10,9 +10,9 @@ TextSnap 是 macOS 屏幕文字识别小工具：按快捷键框选屏幕，系�
 
 | 目录 | 说明 | 状态 |
 |---|---|---|
-| `app-macos/` | macOS 客户端（独立 git 仓库） | 第一波骨架 |
+| `app-macos/` | macOS 客户端（独立 git 仓库） | 已交付，用户 2026-09-19 真机验收通过 |
 
-Remote：`app-macos` → Forgejo 私有 `Max/TextSnap`。本产品文件夹不是 git 仓库。自用，不公开更新源。
+Remote：`app-macos` → Forgejo 私有 `Max/TextSnap`（计划中，尚未建仓推送，当前仅本地 git）。本产品文件夹不是 git 仓库。自用，不公开更新源。
 
 ## 钉死的体验
 
@@ -37,6 +37,10 @@ Remote：`app-macos` → Forgejo 私有 `Max/TextSnap`。本产品文件夹不�
 - 云同步、历史记录库、翻译、截图文件管理。
 - Mac App Store 版、沙盒、第三方登录。
 - 隐藏菜单栏图标。
+
+## 工作约束
+
+- 改 TextSnap 只读本产品目录（`~/Codes/TextSnap/`）与文档导航里显式引用的标准文档；不翻阅其他产品仓源码（2026-09-19 用户否决：前面为套工程惯例翻了别的仓，用户已叫停）。
 
 ## 文档导航
 
