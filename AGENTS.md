@@ -12,7 +12,7 @@ TextSnap 是 macOS 屏幕文字识别小工具：按快捷键框选屏幕，系�
 |---|---|---|
 | `app-macos/` | macOS 客户端（独立 git 仓库） | 已交付，用户 2026-09-19 真机验收通过 |
 
-Remote：`app-macos` → Forgejo 私有 `Max/TextSnap`（计划中，尚未建仓推送，当前仅本地 git）。本产品文件夹不是 git 仓库。自用，不公开更新源。
+Remote：`app-macos` → Forgejo 私有 `Max/TextSnap`。本产品文件夹不是 git 仓库。自用，不公开更新源。
 
 ## 钉死的体验
 
