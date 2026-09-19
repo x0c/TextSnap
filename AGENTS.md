@@ -72,6 +72,12 @@ Product intent: [docs/PRODUCT_CONTRACT.md](docs/PRODUCT_CONTRACT.md). This file 
 
 Forgejo private `Max/TextSnap` (PascalCase native-app name). Do not put the intranet SSH URL in files that might go public later.
 
+## App icon
+
+- The editable masters are `design/app-icon/TextSnap-gradient.svg` and `TextSnap-gradient-foreground.svg`; the 1024px PNG master and all macOS asset-catalog sizes are generated from them.
+- Keep the centered `T` and four selection corners as one visual identity. The background and corners may retain their blue-cyan-violet gradients, but the finished icon must remain fully opaque and pass the 24px and 48px contrast checks.
+- Update both `TextSnap/Assets.xcassets/AppIcon.appiconset/` and `TextSnap/AppIcon.icon/` together; the former produces the bundled `AppIcon.icns`, while the latter preserves the new icon-source workflow.
+
 ## Engineering
 
 - Generate the Xcode project with `xcodegen generate`; do not hand-edit `.xcodeproj`.
