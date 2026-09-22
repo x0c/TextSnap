@@ -14,7 +14,7 @@ enum ScreenCapture {
         try await Task.detached(priority: .userInitiated) {
             let dir = FileManager.default.temporaryDirectory.appendingPathComponent("TextSnap", isDirectory: true)
             try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-            let file = dir.appendingPathComponent("capture-\(Int(Date().timeIntervalSince1970 * 1000)).png")
+            let file = dir.appendingPathComponent("TextSnap-\(UUID().uuidString).png")
             try? FileManager.default.removeItem(at: file)
             let process = Process()
             process.executableURL = URL(fileURLWithPath: "/usr/sbin/screencapture")

@@ -12,16 +12,11 @@ final class CaptureEngine {
     var lastText: String = ""
     var isCapturing = false
 
-    private var generation = 0
-    var onDidCaptureText: ((String) -> Void)?
-
     func captureNow() async {
+        // Re-entrant triggers while a run is in flight are dropped, never queued.
         if isCapturing { return }
-        generation &+= 1
-        let mine = generation
         isCapturing = true
         defer { isCapturing = false }
-        guard mine == generation else { return }
 
         if !ScreenCapturePermission.isGranted {
             ScreenCapturePermission.request()
@@ -30,7 +25,6 @@ final class CaptureEngine {
                 return
             }
         }
-        guard mine == generation else { return }
 
         let imageURL: URL
         do {
@@ -40,7 +34,6 @@ final class CaptureEngine {
             return
         }
         defer { try? FileManager.default.removeItem(at: imageURL) }
-        guard mine == generation else { return }
 
         let text: String
         do {
@@ -52,7 +45,6 @@ final class CaptureEngine {
             )
             return
         }
-        guard mine == generation else { return }
 
         if text.isEmpty {
             showAlert(
@@ -65,7 +57,6 @@ final class CaptureEngine {
         lastText = text
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(text, forType: .string)
-        onDidCaptureText?(text)
         playConfirmSound()
     }
 

@@ -9,7 +9,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private(set) static weak var shared: AppDelegate?
 
     private var statusItemController: StatusItemController?
-    private var becomeActiveObserver: Any?
+    private var becomeActiveObserver: NSObjectProtocol?
     private var readyAt = Date()
     private let appUpdater = AppUpdater()
     private let terminationGuard = TerminationGuard()
@@ -52,10 +52,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             Task { @MainActor in self?.refreshCommands() }
         }
 
-        let isLoginLaunch = LoginLaunchDetector.isLaunchedAsLoginItem
-        readyAt = Date()
         // First launch and login launch stay silent. No window.
-        _ = isLoginLaunch
+        readyAt = Date()
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {

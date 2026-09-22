@@ -153,6 +153,17 @@ struct SettingsView: View {
                 AppDelegate.shared?.requestTermination()
             }
             .focusEffectDisabled()
+            Text(versionFooter)
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
+    }
+
+    /// Bundle version, read live so the xcconfig single source stays authoritative.
+    private var versionFooter: String {
+        let info = Bundle.main.infoDictionary
+        let short = info?["CFBundleShortVersionString"] as? String ?? "-"
+        let build = info?["CFBundleVersion"] as? String ?? "-"
+        return "\(String(localized: "settings.version.label")) \(short) (\(build))"
     }
 }

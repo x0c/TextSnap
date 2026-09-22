@@ -14,10 +14,11 @@ enum StatusBarIcon {
             frame.lineWidth = 1.7 * scale
             frame.stroke()
             let corner = 3.4 * scale
+            let frameOrigin = NSPoint(x: 1.6 * scale, y: 2.2 * scale)
             let tl = NSBezierPath()
-            tl.move(to: NSPoint(x: r(1.6, 2.2, 0, 0).origin.x, y: r(1.6, 2.2, 0, 0).origin.y + 6.0 * scale))
-            tl.line(to: NSPoint(x: r(1.6, 2.2, 0, 0).origin.x, y: r(1.6, 2.2, 0, 0).origin.y + corner))
-            tl.appendArc(withCenter: NSPoint(x: r(1.6, 2.2, 0, 0).origin.x + corner, y: r(1.6, 2.2, 0, 0).origin.y + corner), radius: corner, startAngle: 180, endAngle: 270)
+            tl.move(to: NSPoint(x: frameOrigin.x, y: frameOrigin.y + 6.0 * scale))
+            tl.line(to: NSPoint(x: frameOrigin.x, y: frameOrigin.y + corner))
+            tl.appendArc(withCenter: NSPoint(x: frameOrigin.x + corner, y: frameOrigin.y + corner), radius: corner, startAngle: 180, endAngle: 270)
             tl.lineWidth = 2.2 * scale
             tl.lineCapStyle = .round
             tl.stroke()
