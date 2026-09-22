@@ -10,7 +10,7 @@ Press a shortcut, drag a region on screen, the text in it lands in the clipboard
 
 1. User presses the global shortcut (factory: Command Shift 2) or clicks the menu bar icon (left click), or picks Capture from the menu / settings.
 2. The system selector appears (`screencapture -i -s`). Esc cancels; nothing happens.
-3. On-device Vision reads the captured PNG (accurate level, language correction). No network.
+3. On-device Vision reads the captured PNG (accurate level, revision 3, language correction, automatic language detection, Chinese-varieties-first language order). No network.
 4. Non-empty text goes straight to the general pasteboard; a short sound confirms. No result window.
 5. Empty result, capture failure, or missing screen-recording permission shows a one-shot explanatory alert with a way forward. Never a silent failure, never a retry loop.
 

@@ -1,6 +1,23 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "alert.ok": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\u597d"
+          }
+        }
+      }
+    },
     "about.credits": {
       "extractionState": "manual",
       "localizations": {

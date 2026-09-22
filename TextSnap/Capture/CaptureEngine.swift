@@ -81,7 +81,7 @@ final class CaptureEngine {
         alert.informativeText = String(localized: "permission.denied.body")
         alert.alertStyle = .warning
         alert.addButton(withTitle: String(localized: "permission.openSettings"))
-        alert.addButton(withTitle: String(localized: "updates.unavailable.ok"))
+        alert.addButton(withTitle: String(localized: "alert.ok"))
         NSApp.activate(ignoringOtherApps: true)
         if alert.runModal() == .alertFirstButtonReturn {
             ScreenCapturePermission.openSystemSettings()
@@ -93,7 +93,7 @@ final class CaptureEngine {
         alert.messageText = title
         alert.informativeText = body
         alert.alertStyle = .informational
-        alert.addButton(withTitle: String(localized: "updates.unavailable.ok"))
+        alert.addButton(withTitle: String(localized: "alert.ok"))
         NSApp.activate(ignoringOtherApps: true)
         alert.runModal()
     }
