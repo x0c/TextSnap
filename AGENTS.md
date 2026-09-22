@@ -12,7 +12,7 @@ TextSnap 是 macOS 屏幕文字识别小工具：按快捷键框选屏幕，系�
 |---|---|---|
 | `app-macos/` | macOS 客户端（独立 git 仓库） | 已交付，用户 2026-09-19 真机验收通过 |
 
-Remote：`app-macos` → Forgejo 私有 `Max/TextSnap`（开发真源）+ GitHub 公开 `x0c/TextSnap`（门面与发行，待建，建仓后补链接）。本产品文件夹不是 git 仓库。**发行默认走公开 GitHub**（2026-09-22 用户裁定）：正式 Release 附 Developer ID 签名并公证的 `.dmg`，应用内走 Sparkle 自更新；链路建成前按自用执行，但不得谎报最新。
+Remote：`app-macos` → Forgejo 私有 `Max/TextSnap`（开发真源）+ GitHub 公开 `x0c/TextSnap`（门面与发行，https://github.com/x0c/TextSnap）。本产品文件夹不是 git 仓库。**发行默认走公开 GitHub**（2026-09-22 用户裁定）：正式 Release 附 Developer ID 签名并公证的 `.dmg`，应用内走 Sparkle 自更新；链路建成前按自用执行，但不得谎报最新。
 
 ## 钉死的体验
 
@@ -22,11 +22,11 @@ Remote：`app-macos` → Forgejo 私有 `Max/TextSnap`（开发真源）+ GitHub
 - 认出文字直接进剪贴板并响一声，不弹窗打扰。
 - 认不出、没开屏幕录制才弹一次说明窗。
 - 左键立即框选；右键菜单；不提供隐藏菜单栏图标。
-- 开机自启默认关；检查更新走公开更新源（GitHub Releases + 应用内自更新）；链路未建成前如实报无公开源，不得谎报已是最新。
+- 开机自启默认关；检查更新走公开更新源（GitHub Releases + Sparkle 应用内自更新），不得谎报已是最新。
 
 ## 基线豁免（2026-09-19 复核，c6c2341 落地后）
 
-- **A1 已过豁免期，不再豁免**（2026-09-22 用户裁定公开为默认）：发行链路 = Developer ID 签名 + 公证 `.dmg`（Release 首装入口）+ Sparkle 应用内自更新 + 一键安装渠道；配方见签名公证分发指南。**状态 P0 待建**：首次公开发布即须具备完整链路，不允许先公开源码以后再补；建成前按自用执行。
+- **A1 已过豁免期，不再豁免**（2026-09-22 用户裁定公开为默认）：发行链路 = Developer ID 签名 + 公证 `.dmg`（Release 首装入口）+ Sparkle 应用内自更新 + 一键安装渠道；配方见签名公证分发指南。**状态已落地**（v0.2.0 首发验证通过）：签名 + 公证 dmg + Sparkle 自更新 + 发版脚本 `scripts/publish-release.py`；后续发版沿用同一条链路。
 - **A2** 隐私清单：不收集、不上报用户数据。C1 不做（无日志导出；崩溃走系统报告），C3 不做（无遥测）。
 - **B3** 账号登录：无账号。**B7** 离线优先：无网络业务数据。
 - **A7**：`.icon` 分层与扁平 `appiconset` 已并存（`ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon` + `AppIcon.icon` 资源），产物含 `AppIcon.icns` + `Assets.car`；2026-09-19 起按 P1（下次动图标时迁分层生效链路）。
@@ -85,7 +85,7 @@ Forgejo private `Max/TextSnap` (PascalCase native-app name). Do not put the intr
 
 - Generate the Xcode project with `xcodegen generate`; do not hand-edit `.xcodeproj`.
 - Bundle ID: `top.caozc.TextSnap`. `LSUIElement`. No sandbox. No entitlements file (no special capabilities; screen capture is pure TCC + usage description).
-- MacKit ≥0.1.4: Core, LaunchAtLogin, Lifecycle, StatusItem. Public distribution is the default (P0 pending): Sparkle + notarized `.dmg`; until the chain lands, "Check for Updates" stays on `PersonalBuildUpdateChecker` and must never claim up to date.
+- MacKit ≥0.1.4: Core, LaunchAtLogin, Lifecycle, StatusItem. Public distribution is the default (landed v0.2.0): Sparkle + notarized `.dmg` via `scripts/publish-release.py`; must never claim up to date.
 - Factory hotkey is Command Shift 2 (`kVK_ANSI_2` + `cmdKey | shiftKey`). Customizable, clearable, restorable. Never hard-code anywhere except the factory default.
 - Capture path is `/usr/sbin/screencapture -i -s` (system selector) + on-device Vision `VNRecognizeTextRequest` (accurate). No network. Re-entrant hotkey presses while a capture is in flight are dropped (generation guard).
 - Recognized text goes straight to the general pasteboard. No result window on success; a short sound confirms. Alerts only for denied permission / empty result / failure.

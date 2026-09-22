@@ -39,4 +39,4 @@ Press a shortcut, drag a region on screen, the text in it lands in the clipboard
 
 ## Updates
 
-Default is public distribution: GitHub Releases feed the in-app updater (Sparkle); a signed, notarized `.dmg` is the first-install entry. Until that chain lands, the self-use build honestly reports no public feed. Never claims to be up to date.
+Default is public distribution: GitHub Releases feed the in-app updater (Sparkle); a signed, notarized `.dmg` is the first-install entry. Never claims to be up to date.
