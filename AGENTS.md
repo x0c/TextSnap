@@ -12,7 +12,7 @@ TextSnap 是 macOS 屏幕文字识别小工具：按快捷键框选屏幕，系�
 |---|---|---|
 | `app-macos/` | macOS 客户端（独立 git 仓库） | 已交付，用户 2026-09-19 真机验收通过 |
 
-Remote：`app-macos` → Forgejo 私有 `Max/TextSnap`。本产品文件夹不是 git 仓库。自用，不公开更新源。
+Remote：`app-macos` → Forgejo 私有 `Max/TextSnap`。本产品文件夹不是 git 仓库。2026-09-22 用户要求再推 GitHub 公开仓（`x0c/TextSnap`，待建）并发签名 dmg；公开后「自用」前提失效，A1 豁免待复核。更新仍无公开源（GitHub releases 仅手动下载 dmg）。
 
 ## 钉死的体验
 
@@ -26,7 +26,7 @@ Remote：`app-macos` → Forgejo 私有 `Max/TextSnap`。本产品文件夹不�
 
 ## 基线豁免（2026-09-19 复核，c6c2341 落地后）
 
-- **A1** 应用内自更新 / 对外 dmg：纯自用、不对外分发；仍须签名。
+- **A1** 应用内自更新 / 对外 dmg：纯自用、不对外分发；仍须签名。（2026-09-22 待复核：用户已要求 GitHub 公开发版，该豁免的「不对外」前提变化；复核完成前仍按自用执行，不建更新源。）
 - **A2** 隐私清单：不收集、不上报用户数据。C1 不做（无日志导出；崩溃走系统报告），C3 不做（无遥测）。
 - **B3** 账号登录：无账号。**B7** 离线优先：无网络业务数据。
 - **A7**：`.icon` 分层与扁平 `appiconset` 已并存（`ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon` + `AppIcon.icon` 资源），产物含 `AppIcon.icns` + `Assets.car`；2026-09-19 起按 P1（下次动图标时迁分层生效链路）。
@@ -50,6 +50,7 @@ A6 无障碍审计尚未执行：下次改设置窗时补 Accessibility Inspecto
 
 - [app-macos/AGENTS.md](/Users/geraltgraham/Codes/TextSnap/app-macos/AGENTS.md)：改、评审或排查本应用工程、快捷键、框选、认字、剪贴板、菜单栏或覆盖安装前**必读**。
 - [app-macos/docs/PRODUCT_CONTRACT.md](/Users/geraltgraham/Codes/TextSnap/app-macos/docs/PRODUCT_CONTRACT.md)：改、评审或排查任何用户可见行为前**必读**。
+- [app-macos/README.md](/Users/geraltgraham/Codes/TextSnap/app-macos/README.md)（中文镜像 `README.zh-CN.md`）：改对外安装门面、发版说明前**必读**；两版结构对齐、同一提交内同步，应用图标展示须为圆角矩形。
 - [Swift 规范](/Users/geraltgraham/Codes/_standards/swift.md)：新建、评审或改造本 macOS 应用前**必读**。
 - [macos-app-baseline](/Users/geraltgraham/Codes/_standards/workspace-docs/swift-docs/macos-app-baseline.md)：评审本应用完整度、补分发/开机自启/快捷键/设置窗前**必读**。
 - [macOS 应用开发：菜单栏、生命周期与后台服务](~/.config/agentsync/docs/MACOS_APP_DEVELOPMENT_GUIDE.md)：改、评审或排查菜单栏、登录静默、二次启动防呆、右键与设置对等前**必读**。

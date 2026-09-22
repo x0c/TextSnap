@@ -62,7 +62,7 @@ The region probably had no readable text (or too small to read). One alert expla
 No. Capture uses `/usr/sbin/screencapture`, recognition uses Apple's on-device Vision. There is no network code and no history database.
 
 **Will it auto-update?**
-No. There is no update feed; "Check for Updates" says so honestly. New versions are announced via GitHub releases — download the new `.dmg` when you want it.
+No. There is no update feed; "Check for Updates" says so honestly. New versions live in the repo itself — pull and rebuild when you want one.
 
 **My shortcut does nothing / says taken.**
 Another app already owns that combo — Settings tells you loudly instead of failing silently. Pick a combo with modifiers outside the system screenshot family (`⌘⇧3/4/5/6` are reserved by macOS).

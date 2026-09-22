@@ -62,7 +62,7 @@ xcodebuild -project TextSnap.xcodeproj -scheme TextSnap -configuration Release \
 不会。框调用的是 `/usr/sbin/screencapture`，识别用的是本机 Apple Vision。没有网络代码，也没有历史库。
 
 **会自动更新吗？**
-不会。没有更新源，「检查更新」会如实告诉你。新版本在 GitHub releases 发布，想升就去下新的 `.dmg`。
+不会。没有更新源，「检查更新」会如实告诉你。新版本就在仓库里——想升就拉下来重新编一个。
 
 **快捷键按了没反应 / 说被占用？**
 说明那个组合已经被别的 App 占了 —— 设置里会明确告诉你，而不是静默失败。换一个带修饰键的组合；`⌘⇧3/4/5/6` 是系统截图家族，动不了。
