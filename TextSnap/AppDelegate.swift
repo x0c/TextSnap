@@ -22,7 +22,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppDelegate.shared = self
-        terminationGuard.isUpdateSessionInProgress = { false }
+        terminationGuard.isUpdateSessionInProgress = { [weak self] in
+            self?.appUpdater.sessionInProgress ?? false
+        }
 
         statusItemController = StatusItemController(
             commands: makeCommands(),

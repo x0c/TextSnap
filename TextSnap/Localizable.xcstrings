@@ -647,57 +647,6 @@
         }
       }
     },
-    "updates.unavailable.title": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No public update feed"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "没有公开更新源"
-          }
-        }
-      }
-    },
-    "updates.unavailable.body": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This is a personal build. There is no public update feed to check."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "这是自用版，没有公开更新源可查。"
-          }
-        }
-      }
-    },
-    "updates.unavailable.ok": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "OK"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "好"
-          }
-        }
-      }
-    },
     "permission.denied.title": {
       "extractionState": "manual",
       "localizations": {

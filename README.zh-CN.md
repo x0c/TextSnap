@@ -10,27 +10,29 @@
 [![Latest release](https://img.shields.io/github/v/release/x0c/TextSnap)](https://github.com/x0c/TextSnap/releases/latest)
 ![macOS 26+](https://img.shields.io/badge/macOS-26%2B-black)
 
-![TextSnap 设置窗口](docs/images/settings.png)
+> **仅支持 macOS。** TextSnap 依赖 macOS 专有能力（Vision、屏幕录制授权、菜单栏），没有 Windows / Linux 版。
 
 ## 功能
 
-- **快捷键框选** —— 出厂 `⌘⇧2`，可重录、可清除、可恢复出厂；和系统冲突的组合会明确拒绝并说明原因。
+- **快捷键框选** —— 出厂 `⌘⇧2`，可重录、可清除、可恢复出厂；被占用或系统保留的组合会明确拒绝并说明原因。
 - **系统框选器** —— 你早就熟悉的十字准星；`Esc` 静默取消。
 - **本机识别** —— Apple Vision，精确模式，带语言纠错。没有任何数据离开你的 Mac。
 - **成功零打扰** —— 认出的文字直接进剪贴板并响一声，不弹结果窗。
-- **失败说人话** —— 认不出或没给权限时弹一次说明窗，告诉你怎么办，从不静默失败，也从不反复重试。
+- **失败说人话** —— 认不出或没给权限时弹一次说明窗，告诉你怎么办，从不反复重试。
 - **菜单栏原生** —— 左键直接框选，右键出菜单；无程序坞图标，首次启动保持静默。
-- **可自动化** —— `Capture Screen Text` 意图把核心动作暴露给快捷指令和 Spotlight。
+- **可自动化** —— `Capture Screen Text` 动作可供快捷指令和 Spotlight 调用。
 
 ## 支持的平台
 
-仅 macOS 26（Tahoe）及更高，Apple 芯片与 Intel 均可。TextSnap 依赖 macOS 专有能力（Vision、本机框选授权、菜单栏），没有 Windows / Linux 版。
+仅 macOS 26（Tahoe）及更高，Apple 芯片与 Intel 均可。没有 Windows / Linux 版（见上）。
 
 ## 安装
 
 从 [最新版本](https://github.com/x0c/TextSnap/releases/latest)下载已签名的 `.dmg`，打开后把 TextSnap 拖进 Applications，启动一次。首次启动是静默的 —— 去菜单栏找取景框图标，然后按 `⌘⇧2`。
 
-第一次按快捷键会申请屏幕录制权限；没有它，TextSnap 看不见你框选的区域。如果之前拒绝过，去设置里一键跳回系统设置打开即可。
+> 首个公开版本是 `0.2.0 (2)`；上面的 `.dmg` 链接随它一起生效（发版链路另行落地）。
+
+第一次按快捷键会申请屏幕录制权限；没有它，TextSnap 看不见你框选的区域。如果之前拒绝过，设置里可一键跳回系统设置打开。
 
 ### 从源码构建
 
@@ -62,7 +64,7 @@ xcodebuild -project TextSnap.xcodeproj -scheme TextSnap -configuration Release \
 不会。框调用的是 `/usr/sbin/screencapture`，识别用的是本机 Apple Vision。没有网络代码，也没有历史库。
 
 **会自动更新吗？**
-不会。没有更新源，「检查更新」会如实告诉你。新版本就在仓库里——想升就拉下来重新编一个。
+首个公开版本发布后，应用会跟随 GitHub Releases 检查更新；在此之前「检查更新」会如实告诉你还没有公开更新源，而不会谎称已是最新。
 
 **快捷键按了没反应 / 说被占用？**
 说明那个组合已经被别的 App 占了 —— 设置里会明确告诉你，而不是静默失败。换一个带修饰键的组合；`⌘⇧3/4/5/6` 是系统截图家族，动不了。

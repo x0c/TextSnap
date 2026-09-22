@@ -1,21 +1,28 @@
 import AppKit
 import Foundation
-import MacKitCore
+import Sparkle
 
-/// Self-use build: honestly reports no public feed. Never claims up to date.
+/// Public-update channel: Sparkle checks the signed feed on GitHub Releases.
+/// Never claims "up to date" on its own; Sparkle owns all update UI.
 @MainActor
 final class AppUpdater: NSObject {
-    private let checker = PersonalBuildUpdateChecker()
+    private let updaterController: SPUStandardUpdaterController
+
+    override init() {
+        updaterController = SPUStandardUpdaterController(
+            startingUpdater: true,
+            updaterDelegate: nil,
+            userDriverDelegate: nil
+        )
+        super.init()
+    }
+
+    var sessionInProgress: Bool {
+        updaterController.updater.sessionInProgress
+    }
 
     @objc
     func checkForUpdates(_ sender: Any?) {
-        _ = checker.check()
-        let alert = NSAlert()
-        alert.messageText = String(localized: "updates.unavailable.title")
-        alert.informativeText = String(localized: "updates.unavailable.body")
-        alert.alertStyle = .informational
-        alert.addButton(withTitle: String(localized: "updates.unavailable.ok"))
-        NSApp.activate(ignoringOtherApps: true)
-        alert.runModal()
+        updaterController.checkForUpdates(sender)
     }
 }

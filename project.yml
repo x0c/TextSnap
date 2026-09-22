@@ -52,6 +52,9 @@ packages:
   MacKit:
     url: https://github.com/x0c/mac-kit-swift
     from: "0.1.4"
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    from: "2.10.0"
 
 fileGroups:
   - Configuration
@@ -100,6 +103,8 @@ targets:
         product: MacKitLifecycle
       - package: MacKit
         product: MacKitStatusItem
+      - package: Sparkle
+        product: Sparkle
 
   TextSnapTests:
     type: bundle.unit-test
