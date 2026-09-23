@@ -10,3 +10,5 @@ xcuserdata/
 SourcePackages/
 .swp
 logs/
+__pycache__/
+*.pyc
