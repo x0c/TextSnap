@@ -86,7 +86,7 @@ Forgejo private `Max/TextSnap` (PascalCase native-app name). Do not put the intr
 
 - Generate the Xcode project with `xcodegen generate`; do not hand-edit `.xcodeproj`.
 - Bundle ID: `top.caozc.TextSnap`. `LSUIElement`. No sandbox. No entitlements file (no special capabilities; screen capture is pure TCC + usage description).
-- MacKit ≥0.1.4: Core, LaunchAtLogin, Lifecycle, StatusItem. Public distribution is the default (landed v0.2.0): Sparkle + notarized `.dmg` via `scripts/publish-release.py`; must never claim up to date.
+- MacKit ≥0.1.4: Core, LaunchAtLogin, Lifecycle, StatusItem. Public distribution is the default (landed v0.2.0): Sparkle + notarized `.dmg` via `scripts/publish-release.py`; must never claim up to date. Notary credentials need no exports: explicit env wins, otherwise the script reads `~/.config/textsnap/notary.env` (mode 600, never committed); a missing file keeps the original credential errors.
 - Factory hotkey is Command Shift 2 (`kVK_ANSI_2` + `cmdKey | shiftKey`). Customizable, clearable, restorable. Never hard-code anywhere except the factory default.
 - Capture path is `/usr/sbin/screencapture -i -s` (system selector) + on-device Vision `VNRecognizeTextRequest` (accurate). No network. Re-entrant hotkey presses while a capture is in flight are dropped (generation guard).
 - Recognized text goes straight to the general pasteboard. No result window on success; a short sound confirms. Alerts only for denied permission / empty result / failure.

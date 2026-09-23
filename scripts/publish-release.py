@@ -28,6 +28,11 @@ file is safe to publish in the public repo::
     TEXTSNAP_SPARKLE_ED_KEY_FILE  path to the base64 Ed25519 seed file (update signing);
                                defaults to ~/.config/textsnap/sparkle-ed25519-seed
 
+Unattended runs (agents, cron) need no exports: when any TEXTSNAP_NOTARY_*
+variable is missing, the script falls back to ~/.config/textsnap/notary.env
+(plain KEY=VALUE lines, mode 600, never committed). Explicit environment
+variables always win; a missing file changes nothing.
+
 Non-interactive throughout: on missing credentials the script stops and prints
 the exact gap plus the self-help command instead of prompting.
 """
@@ -68,6 +73,15 @@ SPARKLE_TARBALL_SHA256 = "c2bf58aa8387266ac179357b1415d6f2635f044da8be41042af324
 NOTARY_POLL_INTERVAL = 30
 NOTARY_TIMEOUT = 3600
 NOTARY_MAX_QUERY_FAILURES = 10
+
+# Machine-local credential file for unattended runs. Plain KEY=VALUE lines,
+# mode 600, never committed (same directory convention as the Sparkle seed).
+NOTARY_ENV_FILE = Path.home() / ".config" / "textsnap" / "notary.env"
+NOTARY_ENV_KEYS = (
+    "TEXTSNAP_NOTARY_KEY",
+    "TEXTSNAP_NOTARY_KEY_ID",
+    "TEXTSNAP_NOTARY_ISSUER",
+)
 
 
 class Failure(Exception):
@@ -195,6 +209,29 @@ def check_signing_identity() -> None:
             "+ -> Developer ID Application (Account Holder only; 5 per account)."
         )
     log(f"signing identity: {identities[0].strip()}")
+
+
+def load_local_notary_env() -> None:
+    """Fill missing TEXTSNAP_NOTARY_* vars from the machine-local file.
+
+    Explicit environment variables always win; a missing or unreadable file
+    changes nothing (the usual credential errors still fire below).
+    Only the three known keys are honored, so stray lines cannot inject
+    unrelated environment."""
+    try:
+        lines = NOTARY_ENV_FILE.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return
+    for line in lines:
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+        if key in NOTARY_ENV_KEYS and value:
+            os.environ.setdefault(key, value)
+    log(f"consulted local notary env {NOTARY_ENV_FILE} (explicit env wins)")
 
 
 def require_env(name: str, hint: str) -> str:
@@ -774,6 +811,7 @@ def main() -> int:
         return 1
 
     try:
+        load_local_notary_env()
         for tool in ("xcodebuild", "codesign", "ditto", "hdiutil",
                      "xcrun", "security", "git"):
             need_tool(tool)
