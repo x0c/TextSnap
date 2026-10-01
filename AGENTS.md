@@ -1,8 +1,8 @@
 <!-- managed:inherited-agents:start -->
-<!-- source: /Users/geraltgraham/Codes/TextSnap/AGENTS.md -->
+<!-- source: ~/Codes/TextSnap/AGENTS.md -->
 # TextSnap
 
-通用工程规范：[Swift 规范](/Users/geraltgraham/Codes/_standards/swift.md)
+通用工程规范：[Swift 规范](~/Codes/_standards/swift.md)
 
 TextSnap 是 macOS 屏幕文字识别小工具：按快捷键框选屏幕，系统直接认字，文字进入剪贴板。
 
@@ -50,15 +50,15 @@ A6 无障碍审计尚未执行：下次改设置窗时补 Accessibility Inspecto
 
 ## 文档导航
 
-- [app-macos/AGENTS.md](/Users/geraltgraham/Codes/TextSnap/app-macos/AGENTS.md)：改、评审或排查本应用工程、快捷键、框选、认字、剪贴板、菜单栏或覆盖安装前**必读**。
-- [app-macos/docs/PRODUCT_CONTRACT.md](/Users/geraltgraham/Codes/TextSnap/app-macos/docs/PRODUCT_CONTRACT.md)：改、评审或排查任何用户可见行为前**必读**。
-- [app-macos/README.md](/Users/geraltgraham/Codes/TextSnap/app-macos/README.md)（中文镜像 `README.zh-CN.md`）：改对外安装门面、发版说明前**必读**；两版结构对齐、同一提交内同步，应用图标展示须为圆角矩形。
+- [app-macos/AGENTS.md](~/Codes/TextSnap/app-macos/AGENTS.md)：改、评审或排查本应用工程、快捷键、框选、认字、剪贴板、菜单栏或覆盖安装前**必读**。
+- [app-macos/docs/PRODUCT_CONTRACT.md](~/Codes/TextSnap/app-macos/docs/PRODUCT_CONTRACT.md)：改、评审或排查任何用户可见行为前**必读**。
+- [app-macos/README.md](~/Codes/TextSnap/app-macos/README.md)（中文镜像 `README.zh-CN.md`）：改对外安装门面、发版说明前**必读**；两版结构对齐、同一提交内同步，应用图标展示须为圆角矩形。
 - [GitHub 开源发布指南](~/.config/agentsync/docs/OPEN_SOURCE_GITHUB_GUIDE.md)：动公开门面（README/截图/图标/安装说明）、建公开仓、发公开 Release 前**必读**；先过脱敏审查，零命中才能推。
-- [Swift 规范](/Users/geraltgraham/Codes/_standards/swift.md)：新建、评审或改造本 macOS 应用前**必读**。
-- [macos-app-baseline](/Users/geraltgraham/Codes/_standards/workspace-docs/swift-docs/macos-app-baseline.md)：评审本应用完整度、补分发/开机自启/快捷键/设置窗前**必读**。
+- [Swift 规范](~/Codes/_standards/swift.md)：新建、评审或改造本 macOS 应用前**必读**。
+- [macos-app-baseline](~/Codes/_standards/workspace-docs/swift-docs/macos-app-baseline.md)：评审本应用完整度、补分发/开机自启/快捷键/设置窗前**必读**。
 - [macOS 应用开发：菜单栏、生命周期与后台服务](~/.config/agentsync/docs/MACOS_APP_DEVELOPMENT_GUIDE.md)：改、评审或排查菜单栏、登录静默、二次启动防呆、右键与设置对等前**必读**。
 - [桌面应用配置落点](~/.config/agentsync/docs/DESKTOP_APP_CONFIG_LOCATION_GUIDE.md)：改、评审或排查配置 / 日志 / 缓存落盘前**必读**。
-- [macOS 系统授权](/Users/geraltgraham/Codes/_standards/workspace-docs/swift-docs/macos-system-permissions.md)：改、评审或排查屏幕录制授权与拒绝降级前**必读**。
+- [macOS 系统授权](~/Codes/_standards/workspace-docs/swift-docs/macos-system-permissions.md)：改、评审或排查屏幕录制授权与拒绝降级前**必读**。
 
 <!-- managed:inherited-agents:end -->
 
