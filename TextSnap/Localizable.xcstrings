@@ -13,7 +13,7 @@
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "\u597d"
+            "value": "好"
           }
         }
       }
@@ -82,23 +82,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "TextSnap 设置"
-          }
-        }
-      }
-    },
-    "settings.version.label": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Version"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "版本"
           }
         }
       }
@@ -235,23 +218,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "快捷键"
-          }
-        }
-      }
-    },
-    "settings.hotkey.hint": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Press Record, then press the new combination. Factory default is ⌘⇧2."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "点“录制”，再按新组合键。出厂默认 ⌘⇧2。"
           }
         }
       }
@@ -511,23 +477,6 @@
         }
       }
     },
-    "settings.launchAtLogin.section": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Launch"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "启动"
-          }
-        }
-      }
-    },
     "settings.launchAtLogin.toggle": {
       "extractionState": "manual",
       "localizations": {
@@ -619,13 +568,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nothing recognized yet. Press ⌘⇧2 and drag a region."
+            "value": "No text recognized yet."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "还没有识别结果。按 ⌘⇧2 框选一块屏幕。"
+            "value": "暂无识别结果。"
           }
         }
       }
@@ -643,23 +592,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "再复制一次"
-          }
-        }
-      }
-    },
-    "settings.actions.section": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Actions"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "操作"
           }
         }
       }
@@ -813,6 +745,108 @@
           "stringUnit": {
             "state": "translated",
             "value": "框选一块屏幕区域，把其中的文字拷入剪贴板。"
+          }
+        }
+      }
+    },
+    "settings.capture.section": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Capture"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "识别"
+          }
+        }
+      }
+    },
+    "settings.capture.row": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screen Text"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "屏幕文字"
+          }
+        }
+      }
+    },
+    "settings.general.section": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "General"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "通用"
+          }
+        }
+      }
+    },
+    "settings.hotkey.actions": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shortcut Actions"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "快捷键操作"
+          }
+        }
+      }
+    },
+    "settings.lastResult.text": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recognized Text"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "识别文字"
+          }
+        }
+      }
+    },
+    "settings.quit": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quit"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "退出"
           }
         }
       }

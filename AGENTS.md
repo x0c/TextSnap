@@ -79,7 +79,7 @@ Forgejo private `Max/TextSnap` (PascalCase native-app name). Do not put the intr
 ## App icon
 
 - The editable masters are `design/app-icon/TextSnap-gradient.svg` and `TextSnap-gradient-foreground.svg`; the 1024px PNG master and all macOS asset-catalog sizes are generated from them.
-- Keep the centered `T` and four selection corners as one visual identity. The background and corners may retain their blue-cyan-violet gradients, but the finished icon must remain fully opaque and pass the 24px and 48px contrast checks.
+- Redesign in progress (user decision 2026-10-04): the target look is Apple's own bundled macOS apps — layered glass and light depth, restrained palette, fine craft, at home in the Dock next to system apps. Full-bleed candy colors and sticker-style generic symbols were rejected as cheap; literal function pictures (text lines, clipboard, magnifier) were rejected as unoriginal and dull. The icon needs one unexpected, memorable idea with brighter color; the user shortlisted "a letter peeled off the screen like a sticker" and "an eyedropper that picks up a letter instead of a color". The current `T` with four selection corners on dark navy is not binding: it matches the most crowded competitor pattern. Until a new master ships, the existing assets stay in place. Any icon must remain fully opaque and pass the 24px and 48px contrast checks.
 - Update both `TextSnap/Assets.xcassets/AppIcon.appiconset/` and `TextSnap/AppIcon.icon/` together; the former produces the bundled `AppIcon.icns`, while the latter preserves the new icon-source workflow.
 
 ## Engineering

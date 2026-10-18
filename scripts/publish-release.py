@@ -88,6 +88,17 @@ class Failure(Exception):
     """Fatal pipeline error: message is already user-readable."""
 
 
+def release_notes(marketing: str) -> str:
+    text = (REPO_ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    match = re.search(
+        rf"^## {re.escape(marketing)}\s*$([\s\S]*?)(?=^## |\Z)",
+        text, re.MULTILINE,
+    )
+    if not match:
+        raise Failure(f"CHANGELOG.md has no notes for {marketing}")
+    return f"# {APP_NAME} {marketing}\n\n{match.group(1).strip()}\n"
+
+
 def log(msg: str) -> None:
     print(f"[publish] {msg}", flush=True)
 
@@ -345,7 +356,8 @@ def archive_app(workdir: Path, team_id: str) -> tuple[Path, Path]:
             "-project", str(PROJECT),
             "-scheme", SCHEME,
             "-configuration", "Release",
-            "-destination", "platform=macOS",
+            "-destination", "generic/platform=macOS",
+            "ARCHS=arm64 x86_64", "ONLY_ACTIVE_ARCH=NO",
             "-derivedDataPath", str(workdir / "DerivedData"),
             "-archivePath", str(archive),
         ]
@@ -588,9 +600,7 @@ def build_update_zip_and_appcast(
 
     notes = updates / f"{APP_NAME}-{marketing}.md"
     notes.write_text(
-        f"# {APP_NAME} {marketing}\n\n"
-        "- Screen-text capture, on-device only.\n"
-        "- 屏幕框选识字，仅本机识别。\n",
+        release_notes(marketing),
         encoding="utf-8",
     )
     tool = fetch_sparkle_tools(workdir)
@@ -724,13 +734,16 @@ def release_exists(tag: str) -> bool:
 
 
 def create_empty_release(tag: str, marketing: str) -> None:
-    log(f"creating empty Release {tag} (attachments follow one by one)")
+    log(f"creating Release {tag} (attachments follow one by one)")
+    notes_path = REPO_ROOT / "build" / f"release-notes-{marketing}.md"
+    notes_path.parent.mkdir(parents=True, exist_ok=True)
+    notes_path.write_text(release_notes(marketing), encoding="utf-8")
     for attempt in range(4):
         proc = capture(
             [
                 "gh", "release", "create", tag, "-R", GITHUB_SLUG,
                 "--title", f"{APP_NAME} {marketing}",
-                "--notes", f"{APP_NAME} {marketing} ({marketing}).",
+                "--notes-file", str(notes_path),
             ]
         )
         if proc.returncode == 0:

@@ -36,7 +36,7 @@ enum TextRecognizer {
         } catch {
             throw RecognizeError.visionFailed(error)
         }
-        guard let observations = request.results as? [VNRecognizedTextObservation] else {
+        guard let observations = request.results else {
             return ""
         }
         let lines = observations.compactMap { $0.topCandidates(1).first?.string }
