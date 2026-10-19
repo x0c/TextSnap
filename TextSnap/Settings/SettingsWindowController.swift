@@ -29,7 +29,13 @@ final class SettingsWindowController {
         let center = NotificationCenter.default
         observers = [
             center.addObserver(forName: NSWindow.didBecomeKeyNotification, object: window, queue: .main) { _ in
-                MainActor.assumeIsolated { Self.shared.activationSession.beginIfAccessory() }
+                MainActor.assumeIsolated {
+                    Self.shared.activationSession.beginIfAccessory()
+                    Self.shared.clampToVisibleIfNeeded()
+                }
+            },
+            center.addObserver(forName: NSWindow.didResizeNotification, object: window, queue: .main) { _ in
+                MainActor.assumeIsolated { Self.shared.clampToVisibleIfNeeded() }
             },
             center.addObserver(forName: NSWindow.willCloseNotification, object: window, queue: .main) { _ in
                 MainActor.assumeIsolated {
@@ -39,6 +45,15 @@ final class SettingsWindowController {
             }
         ]
         if window.isKeyWindow { activationSession.beginIfAccessory() }
+        DispatchQueue.main.async { self.clampToVisibleIfNeeded() }
+    }
+
+    private func clampToVisibleIfNeeded() {
+        guard let window, let visible = (window.screen ?? NSScreen.main)?.visibleFrame else { return }
+        var frame = window.frame
+        frame.origin.x = min(max(frame.minX, visible.minX), max(visible.minX, visible.maxX - frame.width))
+        frame.origin.y = min(max(frame.minY, visible.minY), max(visible.minY, visible.maxY - frame.height))
+        if frame.origin != window.frame.origin { window.setFrame(frame, display: true) }
     }
 }
 
