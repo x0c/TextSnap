@@ -12,6 +12,8 @@ Press a shortcut, drag a region on screen, and the text in it lands in your clip
 
 > **macOS only.** TextSnap depends on macOS-only APIs (Vision, screen-capture permission, menu-bar extras) — there is no Windows or Linux version.
 
+![TextSnap Settings with shortcut, screen-recording status and login controls](docs/images/settings.png)
+
 ## Features
 
 - **Shortcut capture** — factory shortcut `⌘⇧2`, re-recordable, clearable, restorable; taken or system-reserved combos are refused with a reason.

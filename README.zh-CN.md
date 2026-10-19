@@ -12,6 +12,8 @@
 
 > **仅支持 macOS。** TextSnap 依赖 macOS 专有能力（Vision、屏幕录制授权、菜单栏），没有 Windows / Linux 版。
 
+![TextSnap 设置中的快捷键、屏幕录制权限和开机自启](docs/images/settings.png)
+
 ## 功能
 
 - **快捷键框选** —— 出厂 `⌘⇧2`，可重录、可清除、可恢复出厂；被占用或系统保留的组合会明确拒绝并说明原因。

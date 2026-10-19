@@ -4,4 +4,3 @@
 
 | 任务 | 状态 | 影响范围 | 开始 | 最近更新 | 备注 |
 |---|---|---|---|---|---|
-| 设置窗原生布局 (Codex) | 验证中 | SettingsView、SettingsWindowController、TextSnapApp、本地化、产品契约、版本与发行 | 10-18 19:48 | 2026-10-19 11:39 | Resumed after screenshot-method correction. Clamp fix built/analyzed for both Mac architectures; six tests passed. Install latest committed app and publish 0.2.3; existing icon assets unchanged. |
