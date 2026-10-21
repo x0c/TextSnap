@@ -68,7 +68,7 @@ Product intent: [docs/PRODUCT_CONTRACT.md](docs/PRODUCT_CONTRACT.md). This file 
 
 ## Documentation navigation
 
-- [docs/PRODUCT_CONTRACT.md](docs/PRODUCT_CONTRACT.md): **Must read** before changing or reviewing capture flow, hotkey, OCR, clipboard, or menu behavior.
+- [docs/PRODUCT_CONTRACT.md](docs/PRODUCT_CONTRACT.md): Product behavior, Settings, app-icon artwork and asset constraints, plus installed acceptance and release evidence.
 - [../../_standards/swift.md](../../_standards/swift.md): Swift engineering baseline.
 - [../../_standards/workspace-docs/swift-docs/macos-app-baseline.md](../../_standards/workspace-docs/swift-docs/macos-app-baseline.md): completion checklist.
 
@@ -116,4 +116,4 @@ xattr -dr com.apple.quarantine /Applications/TextSnap.app 2>/dev/null || true
 open /Applications/TextSnap.app
 ```
 
-First run is silent (no window). Do NOT re-open the app within 60 seconds to trigger the reopen guard, and do NOT open the settings window just for screenshots. Confirm the process is alive and the hotkey registration marker is in the log instead.
+First run is silent (no window). Do NOT re-open the app within 60 seconds to trigger the reopen guard, and do NOT open the settings window just for screenshots. Confirm the installed process is alive and no window opens. The hotkey registration marker is DEBUG-only; check it in the Debug run rather than waiting for it in Release logs.
