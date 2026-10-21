@@ -2,7 +2,7 @@
 
 # TextSnap
 
-<img src="docs/images/app-icon.png" width="96" height="96" alt="TextSnap app icon">
+<img src="docs/images/app-icon.png" width="96" height="96" alt="TextSnap blue glass quotation-mark icon">
 
 Press a shortcut, drag a region on screen, and the text in it lands in your clipboard. macOS menu-bar OCR powered entirely by on-device Apple Vision — no screenshots to manage, no cloud, no accounts.
 

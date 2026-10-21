@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.4
+
+- Replace the application icon with refined blue glass quotation marks on a pale silver background.
+- Preserve the glass highlights and cast shadows across all application-icon sizes; retain the existing menu-bar capture symbol.
+
+### 简体中文
+
+- 应用图标换为浅银色背景上的蓝色玻璃双引号，精修轮廓、高光与小尺寸辨识度。
+- 各尺寸应用图标保留玻璃高光与投影；菜单栏框选符号保持现有设计。
+
 ## 0.2.3
 
 - Reorganize Settings into a compact native grouped form with aligned controls and an integrated app/version/update row.

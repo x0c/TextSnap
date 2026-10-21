@@ -73,8 +73,6 @@ targets:
         excludes:
           - AppIcon.icon
           - "AppIcon.icon/**"
-    resources:
-      - path: TextSnap/AppIcon.icon
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: top.caozc.TextSnap

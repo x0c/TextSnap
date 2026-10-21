@@ -2,7 +2,7 @@
 
 # TextSnap
 
-<img src="docs/images/app-icon.png" width="96" height="96" alt="TextSnap 应用图标">
+<img src="docs/images/app-icon.png" width="96" height="96" alt="TextSnap 蓝色玻璃双引号图标">
 
 按一下快捷键，在屏幕上框选一块区域，里面的文字就进入剪贴板。macOS 菜单栏识字工具，全程调用本机 Apple Vision —— 不留截图文件，不联网，不用账号。
 

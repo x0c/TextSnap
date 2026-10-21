@@ -1,0 +1,8 @@
+{
+  "generation": "Built-in image_gen, refined from selected-native-02.png",
+  "production_source": "../AppIcon-1024.png",
+  "sha256": "19cd08e76af81ef0bd6cd43abb8e63f5bbfcb7c525e4a137991fc77c1234f240",
+  "composition": "Preserved; glass highlights, color variations and cast shadows retained.",
+  "asset_preparation": "image-assets sharp/libvips; Lanczos3 resizing, lossless PNG",
+  "prohibited": "Icon Composer and vector reinterpretation"
+}

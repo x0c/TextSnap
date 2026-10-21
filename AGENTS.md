@@ -29,7 +29,7 @@ Remote：`app-macos` → Forgejo 私有 `Max/TextSnap`（开发真源）+ GitHub
 - **A1 已过豁免期，不再豁免**（2026-09-22 用户裁定公开为默认）：发行链路 = Developer ID 签名 + 公证 `.dmg`（Release 首装入口）+ Sparkle 应用内自更新 + 一键安装渠道；配方见签名公证分发指南。**状态已落地**（v0.2.0 首发验证通过）：签名 + 公证 dmg + Sparkle 自更新 + 发版脚本 `scripts/publish-release.py`；后续发版沿用同一条链路。
 - **A2** 隐私清单：不收集、不上报用户数据。C1 不做（无日志导出；崩溃走系统报告），C3 不做（无遥测）。
 - **B3** 账号登录：无账号。**B7** 离线优先：无网络业务数据。
-- **A7**：`.icon` 分层与扁平 `appiconset` 已并存（`ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon` + `AppIcon.icon` 资源），产物含 `AppIcon.icns` + `Assets.car`；2026-09-19 起按 P1（下次动图标时迁分层生效链路）。
+- **A7 产品例外**（用户裁定 2026-10-21）：禁止使用 Icon Composer；图标沿用位图资源链路，保留用户选定的蓝色玻璃双引号的通透材质和投影，不得改成矢量实色重绘。`.icon` 为不参与构建的旧素材。现行图稿与验收要求见 `app-macos/docs/PRODUCT_CONTRACT.md` 的 App icon。
 - **B5 已过，不再豁免**：`CaptureTextIntent`（框选→本机识字→进剪贴板）已暴露给快捷指令 / Spotlight；`AppIntent.metadata` 随包产物。
 
 **下列不是豁免，必须过：** A3 中英、A4 无蓝框、A5 窗口记忆与标准菜单（⌘, 走系统 Settings 场景经 `.appSettings` 转到单设置窗）、A8 版本双轨（以 xcconfig 为准，project.yml 不再双写）、A9（`~/.config/textsnap/`，目录 700 / 文件 600）、B1 开机自启默认关、B2 可改快捷键（⌘⇧3/4/5/6 截图系预留）、B4 设置窗、B6 权限最小化与拒绝降级（回前台重检；首次授权即刻用 / 开关重开需重启）。
@@ -78,9 +78,8 @@ Forgejo private `Max/TextSnap` (PascalCase native-app name). Do not put the intr
 
 ## App icon
 
-- The editable masters are `design/app-icon/TextSnap-gradient.svg` and `TextSnap-gradient-foreground.svg`; the 1024px PNG master and all macOS asset-catalog sizes are generated from them.
-- Redesign in progress (user decision 2026-10-04): the target look is Apple's own bundled macOS apps — layered glass and light depth, restrained palette, fine craft, at home in the Dock next to system apps. Full-bleed candy colors and sticker-style generic symbols were rejected as cheap; literal function pictures (text lines, clipboard, magnifier) were rejected as unoriginal and dull. The icon needs one unexpected, memorable idea with brighter color; the user shortlisted "a letter peeled off the screen like a sticker" and "an eyedropper that picks up a letter instead of a color". The current `T` with four selection corners on dark navy is not binding: it matches the most crowded competitor pattern. Until a new master ships, the existing assets stay in place. Any icon must remain fully opaque and pass the 24px and 48px contrast checks.
-- Update both `TextSnap/Assets.xcassets/AppIcon.appiconset/` and `TextSnap/AppIcon.icon/` together; the former produces the bundled `AppIcon.icns`, while the latter preserves the new icon-source workflow.
+- The current artwork decision and asset ownership are in [docs/PRODUCT_CONTRACT.md](docs/PRODUCT_CONTRACT.md#app-icon). The owner selected the pale-background blue glass quotation marks (Native 02) for refinement and adoption; the previous sticker/eyedropper exploration is no longer the selected direction.
+- Icon Composer is prohibited for this product (owner correction). Preserve the raster artwork's translucent glass and shadows; do not redraw or flatten it to satisfy a quantized-color heuristic. Use the PNG master and `AppIcon.appiconset`, with actual 24px/48px and installed-display inspection. This product decision supersedes the shared layered-icon baseline and the inherited historical `.icon` migration note.
 
 ## Engineering
 
