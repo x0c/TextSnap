@@ -163,6 +163,6 @@ struct SettingsView: View {
 
     private func refreshStatus() {
         permissionGranted = ScreenCapturePermission.isGranted
-        launchAtLogin.refresh()
+        launchAtLogin.refreshInBackground()
     }
 }

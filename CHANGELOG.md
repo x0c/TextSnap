@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.2.5
+
+- Register the global shortcut before any other launch work, retry failed registrations with backoff, and re-assert it after wake, unlock, session activation and during the first 90 seconds of a login session. The shortcut no longer stays dead while the system settles.
+- Move text recognition off the main thread, resolve Vision's language support once per process, and pre-warm the recognition model at launch. The first recognition after launch no longer freezes the whole app for one to two minutes.
+- Start Sparkle and read launch-at-login state off the launch path; status menus now use a cached, asynchronously refreshed value.
+- Add privacy-safe diagnostics for launch, shortcut and capture timing. Recognized text and clipboard contents are never logged.
+
+### 简体中文
+
+- 全局快捷键改为启动时的第一件事；注册失败会按退避重试，并在唤醒、解锁、会话激活以及登录后前 90 秒内重新注册。系统还在收尾时，快捷键不会再一直失灵。
+- 文字识别移出主线程，Vision 语言能力每进程只查询一次，并在启动后预热识别模型。启动后的首次识别不会再让整个应用卡住一两分钟。
+- Sparkle 与开机自启状态查询移出启动关键路径；状态菜单改用缓存值并异步刷新。
+- 增加不涉及隐私的启动、快捷键和识图耗时诊断日志；绝不上报识别文字或剪贴板内容。
+
 ## 0.2.4
 
 - Replace the application icon with refined blue glass quotation marks on a pale silver background.

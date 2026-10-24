@@ -26,6 +26,19 @@ Press a shortcut, drag a region on screen, the text in it lands in the clipboard
 - Denied state is a first-class UI state: what is missing, what breaks, an Open System Settings button, and an explicit retry. Coming back from settings re-checks automatically.
 - No other system permission is requested.
 
+## Startup and first-use reliability (2026-10-24)
+
+Reported symptom: after boot, the shortcut seemed unusable for one to two minutes. Measured cause, reproduced on this Mac: Vision's first text-recognition pass in a process loads the macOS 27 recognition model and took 63.5 s in a standalone probe and 91.9 s inside TextSnap; the same request took 0.23 s once the model was loaded. The old code ran that first pass synchronously on the main actor, so recognition, the status menu and the global-shortcut callback all froze for that window. The model load is per process, so it also affects first use after a relaunch, not just after boot.
+
+Adopted contract:
+
+- The global shortcut is registered in `applicationWillFinishLaunching`, before the status item, Sparkle, launch-at-login state or any other launch work. A failed registration retries with bounded backoff (1 s through 120 s) and re-asserts after wake, screen wake, unlock, session activation, and at 5/30/90 s while a login session settles. User-recorded conflicts still fail loudly in Settings and are not retried behind the user's back.
+- Text recognition never runs on the main actor. Vision's `supportedRecognitionLanguages()` result is cached for the process, and a launch-time warm-up runs one tiny recognition off-main so the first real capture does not pay the cold-model cost.
+- Sparkle starts about two seconds after launch, never in the pre-launch path. Launch-at-login state is read off-main and cached; status menus never synchronously call `SMAppService` (macOS rebuilds them during login).
+- Diagnostics are privacy-safe: `log show --last boot --predicate 'subsystem == "top.caozc.TextSnap"' --style compact` shows launch phases, registration attempts/retries, every delivered shortcut press, selector duration, OCR duration and character count. Recognized text and clipboard contents are never logged.
+
+Acceptance: on the installed signed build, the shortcut must respond during the warm-up window (log `pressed` and a selector process within ~1 s), and the first capture after launch must not block the menu or a second press. The warm-up duration is recorded so a future macOS regression is measurable.
+
 ## Menu and settings parity
 
 - Right-click menu: Capture Now / Settings / Launch at Login (tri-state) / Check for Updates / About / Quit. No hide-icon item.

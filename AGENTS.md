@@ -87,7 +87,10 @@ Forgejo private `Max/TextSnap` (PascalCase native-app name). Do not put the intr
 - Bundle ID: `top.caozc.TextSnap`. `LSUIElement`. No sandbox. No entitlements file (no special capabilities; screen capture is pure TCC + usage description).
 - MacKit ≥0.1.4: Core, LaunchAtLogin, Lifecycle, StatusItem. Public distribution is the default (landed v0.2.0): Sparkle + notarized `.dmg` via `scripts/publish-release.py`; must never claim up to date. Notary credentials need no exports: explicit env wins, otherwise the script reads `~/.config/textsnap/notary.env` (mode 600, never committed); a missing file keeps the original credential errors.
 - Factory hotkey is Command Shift 2 (`kVK_ANSI_2` + `cmdKey | shiftKey`). Customizable, clearable, restorable. Never hard-code anywhere except the factory default.
+- Launch order is part of the contract: `applicationWillFinishLaunching` registers the shortcut before the status item, Sparkle, `SMAppService` or any other launch work. Failed registrations retry with bounded backoff and are re-asserted after wake/unlock/session activation and at 5/30/90 s. Never add a synchronous `SMAppService` query or Sparkle startup to the pre-ready path; status menus read the cached `LaunchAtLoginManager.menuState`.
 - Capture path is `/usr/sbin/screencapture -i -s` (system selector) + on-device Vision `VNRecognizeTextRequest` (accurate). No network. Re-entrant hotkey presses while a capture is in flight are dropped (generation guard).
+- Vision's first recognition in a process is extremely slow (measured 63.5–91.9 s on macOS 27; 0.23 s warm), so recognition must stay off the main actor, the language-support list is cached per process, and `TextRecognizer.warmUp()` runs once after launch on a utility task. Never call Vision synchronously from a `@MainActor` path.
+- Never launch a build-tree copy (for example `build/DerivedData/.../Debug/TextSnap.app`) while the login item is registered: macOS re-points the background-task record at that copy, so the installed app then reports launch-at-login as off. Install and launch `/Applications/TextSnap.app`, and re-register from its menu if this happens.
 - Recognized text goes straight to the general pasteboard. No result window on success; a short sound confirms. Alerts only for denied permission / empty result / failure.
 - Screen capture permission: `NSScreenCaptureUsageDescription` is mandatory (process is killed without it). Denied state offers Open System Settings + explicit retry; re-check on appear and on become-active.
 - Settings live in `~/.config/textsnap/settings.json` (`$XDG_CONFIG_HOME` aware). No home-directory dotfiles, no Application Support copy.
@@ -117,3 +120,9 @@ open /Applications/TextSnap.app
 ```
 
 First run is silent (no window). Do NOT re-open the app within 60 seconds to trigger the reopen guard, and do NOT open the settings window just for screenshots. Confirm the installed process is alive and no window opens. The hotkey registration marker is DEBUG-only; check it in the Debug run rather than waiting for it in Release logs.
+
+Diagnostics for launch, shortcut and first-use timing (persisted, no user text):
+
+```bash
+log show --last boot --predicate 'subsystem == "top.caozc.TextSnap"' --style compact
+```

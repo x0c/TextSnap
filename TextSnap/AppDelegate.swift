@@ -11,7 +11,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItemController: StatusItemController?
     private var becomeActiveObserver: NSObjectProtocol?
     private var readyAt = Date()
-    private let appUpdater = AppUpdater()
+    private var appUpdater: AppUpdater?
+    private var deferredStartupTasks: [Task<Void, Never>] = []
+    private var isLoginLaunch = false
     private let terminationGuard = TerminationGuard()
     let captureEngine = CaptureEngine.shared
 
@@ -20,10 +22,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         AppDelegate.shared = self
     }
 
+    /// Registration must happen before any window, status-menu or system-service
+    /// work. At login those settle slowly and used to delay (or block) the
+    /// shortcut for minutes.
+    func applicationWillFinishLaunching(_ notification: Notification) {
+        AppDelegate.shared = self
+        let launchedAtLogin = LoginLaunchDetector.isLaunchedAsLoginItem
+        isLoginLaunch = launchedAtLogin
+        TextSnapLog.lifecycle.notice(
+            "willFinishLaunching loginLaunch=\(launchedAtLogin, privacy: .public)"
+        )
+
+        HotkeyManager.shared.onHotKey = { [weak self] in
+            Task { @MainActor in await self?.captureEngine.captureNow() }
+        }
+        HotkeyManager.shared.startFromLaunch()
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
+        let launchStarted = DispatchTime.now()
         AppDelegate.shared = self
         terminationGuard.isUpdateSessionInProgress = { [weak self] in
-            self?.appUpdater.sessionInProgress ?? false
+            self?.appUpdater?.sessionInProgress ?? false
         }
 
         statusItemController = StatusItemController(
@@ -37,25 +57,43 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             accessibilityLabel: String(localized: "status.item.accessibility")
         )
         statusItemController?.isIconVisible = true
-
-        HotkeyManager.shared.onHotKey = { [weak self] in
-            Task { @MainActor in await self?.captureEngine.captureNow() }
-        }
-        HotkeyManager.shared.register()
-        #if DEBUG
-        NSLog("[TextSnap] hotkey registered: %@", HotkeyManager.shared.shortcut?.displayName ?? "none")
-        #endif
+        TextSnapLog.lifecycle.notice(
+            "status item ready after \(TextSnapLog.milliseconds(since: launchStarted), privacy: .public)ms"
+        )
 
         becomeActiveObserver = NotificationCenter.default.addObserver(
             forName: NSApplication.didBecomeActiveNotification,
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            Task { @MainActor in self?.refreshCommands() }
+            MainActor.assumeIsolated {
+                self?.refreshCommands()
+                LaunchAtLoginManager.shared.refreshInBackground()
+            }
         }
+
+        // Cached tri-state first; the real read happens off-main.
+        LaunchAtLoginManager.shared.refreshInBackground()
+
+        // Sparkle startup, Vision warm-up and TCC preflight are useful but must
+        // never sit between the user and the hotkey.
+        deferredStartupTasks.append(Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(2))
+            guard !Task.isCancelled else { return }
+            self?.startUpdaterIfNeeded()
+        })
+        deferredStartupTasks.append(Task.detached(priority: .utility) {
+            TextRecognizer.warmUp()
+        })
+        deferredStartupTasks.append(Task.detached(priority: .utility) {
+            _ = ScreenCapturePermission.isGranted
+        })
 
         // First launch and login launch stay silent. No window.
         readyAt = Date()
+        TextSnapLog.lifecycle.notice(
+            "didFinishLaunching complete after \(TextSnapLog.milliseconds(since: launchStarted), privacy: .public)ms"
+        )
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
@@ -70,7 +108,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if MenuBarReopenPolicy.presentation(
             iconVisible: true,
             isReopenOrLaunch: true,
-            isLoginLaunch: false,
+            isLoginLaunch: isLoginLaunch,
             menubarIsPrimaryEntry: true,
             secondsSinceReady: Date().timeIntervalSince(readyAt)
         ) == .showRecoveryWindow {
@@ -80,6 +118,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        deferredStartupTasks.forEach { $0.cancel() }
+        deferredStartupTasks = []
         HotkeyManager.shared.unregister()
         if let becomeActiveObserver {
             NotificationCenter.default.removeObserver(becomeActiveObserver)
@@ -100,7 +140,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func checkForUpdates() {
-        appUpdater.checkForUpdates(nil)
+        startUpdaterIfNeeded()
+        appUpdater?.checkForUpdates(nil)
     }
 
     func showAbout() {
@@ -109,6 +150,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .applicationName: "TextSnap",
             .credits: NSAttributedString(string: String(localized: "about.credits")),
         ])
+    }
+
+    /// Sparkle starts after the app is usable; its startup performs bundle and
+    /// XPC-service checks that do not belong on the launch path.
+    private func startUpdaterIfNeeded() {
+        guard appUpdater == nil else { return }
+        let started = DispatchTime.now()
+        appUpdater = AppUpdater()
+        TextSnapLog.lifecycle.notice(
+            "updater started after \(TextSnapLog.milliseconds(since: started), privacy: .public)ms"
+        )
     }
 
     private func refreshCommands() {
@@ -131,12 +183,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     manager.setEnabled(!manager.isEnabled)
                 },
                 state: {
-                    LaunchAtLoginManager.shared.refresh()
-                    switch LaunchAtLoginManager.shared.status {
-                    case .on: return .on
-                    case .needsApproval: return .mixed
-                    case .off: return .off
-                    }
+                    // Cached value only: menu rebuilds must never query SMAppService.
+                    LaunchAtLoginManager.shared.menuState
                 }
             ),
             .separator(),

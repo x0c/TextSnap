@@ -4,6 +4,8 @@ import SwiftUI
 
 /// One capture run: permission → system selector → Vision → pasteboard.
 /// A second trigger while a run is in flight is dropped, never queued.
+/// Vision runs off the main actor so a cold first OCR can never freeze the
+/// menu bar, the hotkey or the rest of the app.
 @MainActor
 @Observable
 final class CaptureEngine {
@@ -14,13 +16,28 @@ final class CaptureEngine {
 
     func captureNow() async {
         // Re-entrant triggers while a run is in flight are dropped, never queued.
-        if isCapturing { return }
+        if isCapturing {
+            TextSnapLog.capture.notice("trigger dropped: capture already in flight")
+            return
+        }
         isCapturing = true
         defer { isCapturing = false }
 
-        if !ScreenCapturePermission.isGranted {
+        let captureStarted = DispatchTime.now()
+        TextSnapLog.capture.notice("capture requested")
+
+        // TCC can answer slowly while the login session is settling; keep the
+        // check off the main thread so the app stays responsive.
+        let granted = await Task.detached(priority: .userInitiated) {
+            ScreenCapturePermission.isGranted
+        }.value
+        if !granted {
             ScreenCapturePermission.request()
-            if !ScreenCapturePermission.isGranted {
+            let grantedAfterPrompt = await Task.detached(priority: .userInitiated) {
+                ScreenCapturePermission.isGranted
+            }.value
+            if !grantedAfterPrompt {
+                TextSnapLog.capture.notice("capture blocked: screen recording not granted")
                 showPermissionAlert()
                 return
             }
@@ -31,20 +48,35 @@ final class CaptureEngine {
             imageURL = try await ScreenCapture.captureRegion()
         } catch {
             // Esc cancel: stay silent.
+            TextSnapLog.capture.notice(
+                "selector ended without an image after \(TextSnapLog.milliseconds(since: captureStarted), privacy: .public)ms"
+            )
             return
         }
         defer { try? FileManager.default.removeItem(at: imageURL) }
+        TextSnapLog.capture.notice(
+            "selector finished after \(TextSnapLog.milliseconds(since: captureStarted), privacy: .public)ms"
+        )
 
+        let ocrStarted = DispatchTime.now()
         let text: String
         do {
-            text = try TextRecognizer.recognizeText(in: imageURL)
+            text = try await Task.detached(priority: .userInitiated) {
+                try TextRecognizer.recognizeText(in: imageURL)
+            }.value
         } catch {
+            TextSnapLog.capture.error(
+                "ocr failed after \(TextSnapLog.milliseconds(since: ocrStarted), privacy: .public)ms: \(String(describing: error), privacy: .public)"
+            )
             showAlert(
                 title: String(localized: "capture.failed.title"),
                 body: String(localized: "capture.failed.body")
             )
             return
         }
+        TextSnapLog.capture.notice(
+            "ocr finished in \(TextSnapLog.milliseconds(since: ocrStarted), privacy: .public)ms chars=\(text.count, privacy: .public)"
+        )
 
         if text.isEmpty {
             showAlert(
@@ -58,6 +90,9 @@ final class CaptureEngine {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(text, forType: .string)
         playConfirmSound()
+        TextSnapLog.capture.notice(
+            "copied to pasteboard; total \(TextSnapLog.milliseconds(since: captureStarted), privacy: .public)ms"
+        )
     }
 
     func copyLastAgain() {
@@ -65,6 +100,7 @@ final class CaptureEngine {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(lastText, forType: .string)
         playConfirmSound()
+        TextSnapLog.capture.notice("copied last result again")
     }
 
     private func playConfirmSound() {

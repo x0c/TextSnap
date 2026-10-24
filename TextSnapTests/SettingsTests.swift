@@ -58,3 +58,16 @@ private struct SettingsFile: Codable {
     #expect(reloaded.storedHotkey() == nil)
     try? FileManager.default.removeItem(at: tmp)
 }
+
+@Test func hotkeyRetryDelaysGrowAndCap() {
+    let delays = HotkeyRetryPolicy.delays
+    #expect(delays.count == 8)
+    for (earlier, later) in zip(delays, delays.dropFirst()) {
+        #expect(earlier < later)
+    }
+    #expect(delays.last == .seconds(120))
+}
+
+@Test func hotkeySettleReassertsRunDuringLoginWindow() {
+    #expect(HotkeySettlePolicy.delays == [.seconds(5), .seconds(30), .seconds(90)])
+}

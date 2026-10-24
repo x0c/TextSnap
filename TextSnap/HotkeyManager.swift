@@ -111,6 +111,9 @@ final class HotkeyManager: ObservableObject {
     private var eventHandler: EventHandlerRef?
     private var recordingMonitor: Any?
     private var nextHotKeyID: UInt32 = 1
+    private var retryTask: Task<Void, Never>?
+    private var settleTasks: [Task<Void, Never>] = []
+    private var hotKeyObservers: [(center: NotificationCenter, token: NSObjectProtocol)] = []
     var onHotKey: (@MainActor () -> Void)?
 
     private init() {
@@ -123,12 +126,51 @@ final class HotkeyManager: ObservableObject {
         }
     }
 
+    /// Launch entry point: register before any window or system-service work,
+    /// then keep trying and re-assert across session activation. A login-time
+    /// WindowServer stall must not leave the shortcut dead until the next restart.
+    func startFromLaunch() {
+        observeLifecycle()
+        guard let shortcut else {
+            TextSnapLog.hotkey.notice("launch registration skipped: shortcut cleared")
+            return
+        }
+        TextSnapLog.hotkey.notice(
+            "launch registration begin keyCode=\(shortcut.keyCode, privacy: .public) modifiers=\(shortcut.modifiers, privacy: .public)"
+        )
+        register(shortcut, persist: false)
+        scheduleSettleReasserts()
+        if hotKeyRef == nil { scheduleRetry(reason: "launch") }
+    }
+
     func register() {
         guard let shortcut else { return }
         register(shortcut, persist: false)
     }
 
+    /// Force a fresh Carbon registration. Safe while already registered; used
+    /// after wake/unlock and during the first minutes of a login session, when
+    /// the WindowServer may still be settling.
+    func reassertRegistration(reason: String) {
+        guard let shortcut else { return }
+        if let ref = hotKeyRef {
+            UnregisterEventHotKey(ref)
+            hotKeyRef = nil
+        }
+        TextSnapLog.hotkey.notice("reassert reason=\(reason, privacy: .public)")
+        register(shortcut, persist: false)
+        if hotKeyRef == nil { scheduleRetry(reason: reason) }
+    }
+
     func unregister() {
+        retryTask?.cancel()
+        retryTask = nil
+        settleTasks.forEach { $0.cancel() }
+        settleTasks = []
+        for observer in hotKeyObservers {
+            observer.center.removeObserver(observer.token)
+        }
+        hotKeyObservers = []
         if let ref = hotKeyRef {
             UnregisterEventHotKey(ref)
             hotKeyRef = nil
@@ -137,6 +179,71 @@ final class HotkeyManager: ObservableObject {
             RemoveEventHandler(handler)
             eventHandler = nil
         }
+    }
+
+    /// Bounded exponential retry: a failed launch registration is retried until
+    /// it succeeds, but never in a tight loop.
+    private func scheduleRetry(reason: String) {
+        retryTask?.cancel()
+        retryTask = Task { @MainActor [weak self] in
+            for (index, delay) in HotkeyRetryPolicy.delays.enumerated() {
+                if Task.isCancelled { return }
+                try? await Task.sleep(for: delay)
+                guard !Task.isCancelled, let self, let shortcut = self.shortcut else { return }
+                if self.hotKeyRef != nil { return }
+                TextSnapLog.hotkey.notice(
+                    "retry attempt \(index + 1, privacy: .public) reason=\(reason, privacy: .public)"
+                )
+                self.register(shortcut, persist: false)
+                if self.hotKeyRef != nil {
+                    TextSnapLog.hotkey.notice("retry succeeded")
+                    return
+                }
+            }
+            TextSnapLog.hotkey.error("retries exhausted; shortcut remains unregistered")
+        }
+    }
+
+    /// Re-register a few times while a login session finishes bootstrapping.
+    /// These passes are idempotent and cost nothing when already healthy.
+    private func scheduleSettleReasserts() {
+        settleTasks.forEach { $0.cancel() }
+        settleTasks = HotkeySettlePolicy.delays.map { delay in
+            Task { @MainActor [weak self] in
+                try? await Task.sleep(for: delay)
+                guard !Task.isCancelled else { return }
+                self?.reassertRegistration(reason: "settle")
+            }
+        }
+    }
+
+    private func observeLifecycle() {
+        guard hotKeyObservers.isEmpty else { return }
+        let workspaceCenter = NSWorkspace.shared.notificationCenter
+        let workspaceNames: [Notification.Name] = [
+            NSWorkspace.didWakeNotification,
+            NSWorkspace.screensDidWakeNotification,
+            NSWorkspace.sessionDidBecomeActiveNotification,
+        ]
+        for name in workspaceNames {
+            let token = workspaceCenter.addObserver(
+                forName: name, object: nil, queue: .main
+            ) { [weak self] _ in
+                MainActor.assumeIsolated {
+                    self?.reassertRegistration(reason: name.rawValue)
+                }
+            }
+            hotKeyObservers.append((workspaceCenter, token))
+        }
+        let unlockName = Notification.Name("com.apple.screenIsUnlocked")
+        let unlockToken = DistributedNotificationCenter.default().addObserver(
+            forName: unlockName, object: nil, queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                self?.reassertRegistration(reason: "unlock")
+            }
+        }
+        hotKeyObservers.append((DistributedNotificationCenter.default(), unlockToken))
     }
 
     func beginRecording() {
@@ -162,6 +269,10 @@ final class HotkeyManager: ObservableObject {
 
     func clearShortcut() {
         stopRecording()
+        retryTask?.cancel()
+        retryTask = nil
+        settleTasks.forEach { $0.cancel() }
+        settleTasks = []
         if let ref = hotKeyRef {
             UnregisterEventHotKey(ref)
             hotKeyRef = nil
@@ -169,6 +280,7 @@ final class HotkeyManager: ObservableObject {
         shortcut = nil
         TextSnapSettings.shared.clearHotkey()
         lastErrorMessage = nil
+        TextSnapLog.hotkey.notice("shortcut cleared")
     }
 
     func restoreFactoryDefault() {
@@ -202,6 +314,9 @@ final class HotkeyManager: ObservableObject {
         nextHotKeyID &+= 1
         let status = RegisterEventHotKey(candidate.keyCode, candidate.modifiers, hotKeyID, GetApplicationEventTarget(), 0, &newRef)
         guard status == noErr, let newRef else {
+            TextSnapLog.hotkey.error(
+                "RegisterEventHotKey failed status=\(status, privacy: .public) keyCode=\(candidate.keyCode, privacy: .public) modifiers=\(candidate.modifiers, privacy: .public)"
+            )
             lastErrorMessage = String(localized: "settings.hotkey.taken")
             return
         }
@@ -209,6 +324,11 @@ final class HotkeyManager: ObservableObject {
         hotKeyRef = newRef
         shortcut = candidate
         lastErrorMessage = nil
+        retryTask?.cancel()
+        retryTask = nil
+        TextSnapLog.hotkey.notice(
+            "registered keyCode=\(candidate.keyCode, privacy: .public) modifiers=\(candidate.modifiers, privacy: .public) persisted=\(persist, privacy: .public)"
+        )
         if persist {
             TextSnapSettings.shared.saveHotkey(keyCode: candidate.keyCode, modifiers: candidate.modifiers)
         }
@@ -225,6 +345,7 @@ final class HotkeyManager: ObservableObject {
             return noErr
         }, 1, &eventType, selfPtr, &eventHandler)
         guard status == noErr else {
+            TextSnapLog.hotkey.error("InstallEventHandler failed status=\(status, privacy: .public)")
             lastErrorMessage = String(localized: "settings.hotkey.initFailed")
             return false
         }
@@ -232,6 +353,7 @@ final class HotkeyManager: ObservableObject {
     }
 
     nonisolated private func dispatchHotKey() {
+        TextSnapLog.hotkey.notice("pressed")
         Task { @MainActor in self.onHotKey?() }
     }
 
@@ -268,4 +390,20 @@ final class HotkeyManager: ObservableObject {
         ]
         return shortcut.modifiers == (command | shift) && screenshotKeys.contains(shortcut.keyCode)
     }
+}
+
+/// Backoff for a failed launch registration. Delays are absolute per attempt,
+/// so a persistently blocked shortcut never spins the main thread.
+enum HotkeyRetryPolicy {
+    nonisolated static let delays: [Duration] = [
+        .seconds(1), .seconds(2), .seconds(4), .seconds(8),
+        .seconds(15), .seconds(30), .seconds(60), .seconds(120),
+    ]
+}
+
+/// Re-registration points while a login session finishes bootstrapping.
+enum HotkeySettlePolicy {
+    nonisolated static let delays: [Duration] = [
+        .seconds(5), .seconds(30), .seconds(90),
+    ]
 }
