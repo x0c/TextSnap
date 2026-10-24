@@ -39,6 +39,16 @@ Adopted contract:
 
 Acceptance: on the installed signed build, the shortcut must respond during the warm-up window (log `pressed` and a selector process within ~1 s), and the first capture after launch must not block the menu or a second press. The warm-up duration is recorded so a future macOS regression is measurable.
 
+## Installed acceptance and delivery (0.2.5)
+
+Root cause evidence: a standalone Vision probe took 63.5 s for its first recognition and 0.23 s immediately afterwards; the in-app first recognition took 91.9 s, and a text-bearing launch warm-up later measured 37.4 s. The old code ran that pass synchronously on the main actor, which is why the shortcut and the whole app appeared dead for one to two minutes. During the 37.4 s warm-up, the refactored app still logged a settle re-registration, and during a 37.7 s real OCR it logged a second hotkey press and the expected "capture already in flight" drop, proving the main thread stayed responsive.
+
+Verification on the Developer ID Release build: eight tests passed and the universal Release build plus `analyze` completed with zero compiler or analyzer warnings. The shortcut registered in `applicationWillFinishLaunching` (same timestamp as the launch callback), the status item was ready 80–110 ms later, Sparkle started about two seconds after launch, and the launch-at-login read completed off-main. A real capture completed the full hotkey → selector → Vision → pasteboard path with 275 characters copied; OCR after the warm-up took 664 ms.
+
+The notarized public export replaced `/Applications/TextSnap.app`; installed version/build read back 0.2.5 / 7, the Developer ID signature and hardened-runtime flag validated, `stapler validate` passed, and `spctl` reported the Developer ID origin while this host still reports security assessment disabled (so that result does not establish stock-Gatekeeper enforcement). The installed process stayed alive with no window. Launch logs showed `launch at login status=on`, the warm-up completed in 367 ms with 21 probe characters, and the updater started after the launch path. The public [0.2.5 release](https://github.com/x0c/TextSnap/releases/tag/v0.2.5) carries the notarized DMG, signed update ZIP and build-7 appcast; the publisher's anonymous downloads verified all three files plus the latest-feed appcast.
+
+Limitations: the final installed interaction acceptance ran while the screen was locked, and macOS does not deliver global shortcuts under screen lock, so post-install hotkey and capture interaction were not repeated on the notarized artifact; the equivalent path was verified on the Developer ID build immediately before locking. The tccd preflight for the notarized build reported no code-requirement mismatch, but the first real capture after an update should still be confirmed once the screen is unlocked. During testing, launching a build-tree copy re-pointed the background-task login record at that copy; the installed app then reported launch-at-login as off until it was re-registered from its menu against `/Applications/TextSnap.app`. Agent builds must not launch DerivedData copies while the login item is registered.
+
 ## Menu and settings parity
 
 - Right-click menu: Capture Now / Settings / Launch at Login (tri-state) / Check for Updates / About / Quit. No hide-icon item.
