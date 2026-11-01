@@ -1,6 +1,6 @@
 import Foundation
 
-/// File-backed settings. Single truth for the hotkey. Last OCR text stays memory-only.
+/// File-backed preferences for shortcuts and menu-bar visibility. OCR text stays memory-only.
 @MainActor
 @Observable
 final class TextSnapSettings {
@@ -9,6 +9,9 @@ final class TextSnapSettings {
     var hotkeyKeyCode: UInt32?
     var hotkeyModifiers: UInt32?
     var hotkeyEnabled: Bool
+    private(set) var isMenuBarIconVisible: Bool
+
+    static let defaultMenuBarIconVisible = true
 
     private let fileURL: URL
 
@@ -19,6 +22,7 @@ final class TextSnapSettings {
         self.hotkeyKeyCode = loaded.keyCode
         self.hotkeyModifiers = loaded.modifiers
         self.hotkeyEnabled = loaded.enabled
+        self.isMenuBarIconVisible = loaded.iconVisible
     }
 
     nonisolated static func directoryURL() -> URL {
@@ -50,46 +54,71 @@ final class TextSnapSettings {
         return (code, mods)
     }
 
+    /// Keep the current state if the preference cannot be saved.
+    func setMenuBarIconVisible(_ visible: Bool) -> Bool {
+        let previous = isMenuBarIconVisible
+        isMenuBarIconVisible = visible
+        guard persist() else {
+            isMenuBarIconVisible = previous
+            return false
+        }
+        return true
+    }
+
     private struct Loaded: Sendable {
         var keyCode: UInt32?
         var modifiers: UInt32?
         var enabled: Bool
+        var iconVisible: Bool
     }
 
     private struct File: Codable {
         var hotkeyKeyCode: Int?
         var hotkeyModifiers: Int?
         var hotkeyEnabled: Bool?
+        var isMenuBarIconVisible: Bool?
+
+        enum CodingKeys: String, CodingKey {
+            case hotkeyKeyCode, hotkeyModifiers, hotkeyEnabled
+            case isMenuBarIconVisible = "menuBar.iconVisible"
+        }
     }
 
     private static func load(from url: URL) -> Loaded {
         guard let data = try? Data(contentsOf: url),
               let decoded = try? JSONDecoder().decode(File.self, from: data)
         else {
-            return Loaded(keyCode: nil, modifiers: nil, enabled: true)
+            return Loaded(keyCode: nil, modifiers: nil, enabled: true, iconVisible: defaultMenuBarIconVisible)
         }
         let code = decoded.hotkeyKeyCode.map { UInt32($0) }
         let mods = decoded.hotkeyModifiers.map { UInt32($0) }
-        return Loaded(keyCode: code, modifiers: mods, enabled: decoded.hotkeyEnabled ?? true)
+        return Loaded(
+            keyCode: code, modifiers: mods, enabled: decoded.hotkeyEnabled ?? true,
+            iconVisible: decoded.isMenuBarIconVisible ?? defaultMenuBarIconVisible
+        )
     }
 
-    private func persist() {
+    @discardableResult
+    private func persist() -> Bool {
         let dir = fileURL.deletingLastPathComponent()
         do {
             try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-            try? FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: dir.path)
+            try FileManager.default.setAttributes([.posixPermissions: 0o700], ofItemAtPath: dir.path)
             let file = File(
                 hotkeyKeyCode: hotkeyKeyCode.map { Int($0) },
                 hotkeyModifiers: hotkeyModifiers.map { Int($0) },
-                hotkeyEnabled: hotkeyEnabled
+                hotkeyEnabled: hotkeyEnabled,
+                isMenuBarIconVisible: isMenuBarIconVisible
             )
             let data = try JSONEncoder().encode(file)
             try data.write(to: fileURL, options: .atomic)
-            try? FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: fileURL.path)
+            try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: fileURL.path)
+            return true
         } catch {
             #if DEBUG
             NSLog("[TextSnap] settings persist failed: %@", error.localizedDescription)
             #endif
+            return false
         }
     }
 }

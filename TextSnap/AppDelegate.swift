@@ -56,7 +56,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             StatusBarIcon.image(pointSize: 18),
             accessibilityLabel: String(localized: "status.item.accessibility")
         )
-        statusItemController?.isIconVisible = true
+        statusItemController?.isIconVisible = TextSnapSettings.shared.isMenuBarIconVisible
         TextSnapLog.lifecycle.notice(
             "status item ready after \(TextSnapLog.milliseconds(since: launchStarted), privacy: .public)ms"
         )
@@ -89,11 +89,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             _ = ScreenCapturePermission.isGranted
         })
 
-        // First launch and login launch stay silent. No window.
+        // Visible-icon first launch and every login launch stay silent.
         readyAt = Date()
         TextSnapLog.lifecycle.notice(
             "didFinishLaunching complete after \(TextSnapLog.milliseconds(since: launchStarted), privacy: .public)ms"
         )
+        if MenuBarReopenPolicy.shouldShowRecoveryWindow(
+            iconVisible: TextSnapSettings.shared.isMenuBarIconVisible,
+            isLoginLaunch: isLoginLaunch
+        ) {
+            showMainWindow()
+        }
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
@@ -106,9 +112,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         if MenuBarReopenPolicy.presentation(
-            iconVisible: true,
+            iconVisible: statusItemController?.isIconVisible ?? TextSnapSettings.shared.isMenuBarIconVisible,
             isReopenOrLaunch: true,
-            isLoginLaunch: isLoginLaunch,
+            // This is a new user request, not the process's original login launch.
+            isLoginLaunch: false,
             menubarIsPrimaryEntry: true,
             secondsSinceReady: Date().timeIntervalSince(readyAt)
         ) == .showRecoveryWindow {
@@ -133,6 +140,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func showMainWindow() {
         SettingsWindowController.shared.show()
+    }
+
+    func setMenuBarIconVisible(_ visible: Bool) {
+        guard TextSnapSettings.shared.setMenuBarIconVisible(visible) else {
+            let alert = NSAlert()
+            alert.messageText = String(localized: "settings.menuBar.saveFailed.title")
+            alert.informativeText = String(localized: "settings.menuBar.saveFailed.body")
+            alert.addButton(withTitle: String(localized: "alert.ok"))
+            alert.runModal()
+            return
+        }
+        statusItemController?.isIconVisible = visible
     }
 
     func captureNow() {
@@ -187,6 +206,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     LaunchAtLoginManager.shared.menuState
                 }
             ),
+            StatusItemCommand(title: String(localized: "menu.hideMenuBarIcon"), action: { [weak self] in
+                self?.setMenuBarIconVisible(false)
+            }),
             .separator(),
             StatusItemCommand(title: String(localized: "menu.checkForUpdates"), action: { [weak self] in
                 self?.checkForUpdates()

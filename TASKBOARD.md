@@ -4,3 +4,4 @@
 
 | 任务 | 状态 | 影响范围 | 开始 | 最近更新 | 备注 |
 |---|---|---|---|---|---|
+| Pi: add menu-bar icon visibility and recovery | 进行中 | TextSnap settings/delegate/localization/tests, product docs, release; Xcode + MacKit + signing | 16:25 | 2026-11-01 16:44 | Installed UI and 13 tests passed; publishing 0.2.6 (8), logs/publish-v0.2.6.log |

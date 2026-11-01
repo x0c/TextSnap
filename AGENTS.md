@@ -21,7 +21,7 @@ Remote：`app-macos` → Forgejo 私有 `Max/TextSnap`（开发真源）+ GitHub
 - 认字只用本机 Vision，不联网。
 - 认出文字直接进剪贴板并响一声，不弹窗打扰。
 - 认不出、没开屏幕录制才弹一次说明窗。
-- 左键立即框选；右键菜单；不提供隐藏菜单栏图标。
+- 左键立即框选；右键菜单提供隐藏菜单栏图标，设置提供显示开关；隐藏后快捷键照常工作，再次主动打开应用进入同一设置窗恢复（2026-11-01 用户纠正，取代旧禁止项）。
 - 开机自启默认关；检查更新走公开更新源（GitHub Releases + Sparkle 应用内自更新），不得谎报已是最新。
 
 ## 基线豁免（2026-09-19 复核，c6c2341 落地后）
@@ -34,13 +34,12 @@ Remote：`app-macos` → Forgejo 私有 `Max/TextSnap`（开发真源）+ GitHub
 
 **下列不是豁免，必须过：** A3 中英、A4 无蓝框、A5 窗口记忆与标准菜单（⌘, 走系统 Settings 场景经 `.appSettings` 转到单设置窗）、A8 版本双轨（以 xcconfig 为准，project.yml 不再双写）、A9（`~/.config/textsnap/`，目录 700 / 文件 600）、B1 开机自启默认关、B2 可改快捷键（⌘⇧3/4/5/6 截图系预留）、B4 设置窗、B6 权限最小化与拒绝降级（回前台重检；首次授权即刻用 / 开关重开需重启）。
 
-A6 无障碍审计尚未执行：下次改设置窗时补 Accessibility Inspector 一遍。
+A6 无障碍审计尚未完成：2026-11-01 已尝试 Accessibility Inspector，但工具无法创建审计窗口；新开关 AX 标签与取值已验证，不代替 Inspector / VoiceOver 全流程。环境限制与后续项见 PRODUCT_CONTRACT 的 0.2.6 验收记录。
 
 ## 明确不做
 
 - 云同步、历史记录库、翻译、截图文件管理。
 - Mac App Store 版、沙盒、第三方登录。
-- 隐藏菜单栏图标。
 
 ## 工作约束
 
@@ -68,7 +67,7 @@ Product intent: [docs/PRODUCT_CONTRACT.md](docs/PRODUCT_CONTRACT.md). This file 
 
 ## Documentation navigation
 
-- [docs/PRODUCT_CONTRACT.md](docs/PRODUCT_CONTRACT.md): Product behavior, Settings, app-icon artwork and asset constraints, plus installed acceptance and release evidence.
+- [docs/PRODUCT_CONTRACT.md](docs/PRODUCT_CONTRACT.md): Product behavior, Settings, menu-bar visibility and recovery, app-icon artwork and asset constraints, plus installed acceptance and release evidence.
 - [../../_standards/swift.md](../../_standards/swift.md): Swift engineering baseline.
 - [../../_standards/workspace-docs/swift-docs/macos-app-baseline.md](../../_standards/workspace-docs/swift-docs/macos-app-baseline.md): completion checklist.
 
@@ -94,8 +93,8 @@ Forgejo private `Max/TextSnap` (PascalCase native-app name). Do not put the intr
 - Recognized text goes straight to the general pasteboard. No result window on success; a short sound confirms. Alerts only for denied permission / empty result / failure.
 - Screen capture permission: `NSScreenCaptureUsageDescription` is mandatory (process is killed without it). Denied state offers Open System Settings + explicit retry; re-check on appear and on become-active.
 - Settings live in `~/.config/textsnap/settings.json` (`$XDG_CONFIG_HOME` aware). No home-directory dotfiles, no Application Support copy.
-- Menu bar is the primary entry: `MenuBarReopenPolicy` with `menubarIsPrimaryEntry: true`. No hide-icon item anywhere. Left click captures immediately.
-- Single settings window holds everything: shortcut, permission, launch at login, last result, capture / check updates / about / quit. Right-click menu has parity.
+- Left click captures immediately. Menu-bar visibility and hidden-icon recovery follow [the product contract](docs/PRODUCT_CONTRACT.md#menu-bar-icon-visibility-owner-correction-2026-11-01); pass the actual visibility to `MenuBarReopenPolicy`, and never reuse the original login-launch flag for a later user reopen.
+- Single settings window holds everything: shortcut, permission, launch at login, menu-bar visibility, last result, capture / check updates / about / quit. Right-click menu has parity.
 
 ## Verification
 
@@ -106,6 +105,8 @@ xcodebuild -project TextSnap.xcodeproj -scheme TextSnap -configuration Debug \
 xcodebuild -project TextSnap.xcodeproj -scheme TextSnap -configuration Debug \
   -destination 'platform=macOS' -derivedDataPath build/DerivedData test
 ```
+
+When the login item is registered, non-presenting tests use `build-for-testing` plus native `xctest` with the Debug dylib/framework search paths, without launching the build-tree app. The current tested coverage and limits are in [the 0.2.6 acceptance record](docs/PRODUCT_CONTRACT.md#installed-acceptance-026).
 
 Overlay install must delete the old bundle first, then copy whole, then launch once:
 
@@ -119,7 +120,7 @@ xattr -dr com.apple.quarantine /Applications/TextSnap.app 2>/dev/null || true
 open /Applications/TextSnap.app
 ```
 
-First run is silent (no window). Do NOT re-open the app within 60 seconds to trigger the reopen guard, and do NOT open the settings window just for screenshots. Confirm the installed process is alive and no window opens. The hotkey registration marker is DEBUG-only; check it in the Debug run rather than waiting for it in Release logs.
+Visible-icon first run and all login launches are silent (no window); a user cold launch with a previously hidden icon opens the same Settings recovery surface. Do NOT re-open the app within 60 seconds merely to trigger the reopen guard. Routine overwrite-install verification confirms the installed process is alive without opening Settings; a task changing Settings may open it only within the product contract's explicit acceptance scope. The hotkey registration marker is DEBUG-only; check it in the Debug run rather than waiting for it in Release logs.
 
 Diagnostics for launch, shortcut and first-use timing (persisted, no user text):
 

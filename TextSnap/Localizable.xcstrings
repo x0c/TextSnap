@@ -154,6 +154,41 @@
         }
       }
     },
+    "menu.hideMenuBarIcon": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Hide Menu Bar Icon" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "隐藏菜单栏图标" } }
+      }
+    },
+    "settings.menuBar.showIcon": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Show Menu Bar Icon" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "显示菜单栏图标" } }
+      }
+    },
+    "settings.menuBar.recoveryHint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "To show it again, reopen TextSnap from Applications or Spotlight." } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "从“应用程序”或 Spotlight 再次打开 TextSnap，即可恢复显示。" } }
+      }
+    },
+    "settings.menuBar.saveFailed.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Could not save menu bar visibility" } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "无法保存菜单栏图标设置" } }
+      }
+    },
+    "settings.menuBar.saveFailed.body": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Check that TextSnap can write to its configuration folder, then try again. The icon visibility has not changed." } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "请确认 TextSnap 可以写入配置文件夹后重试。图标显示状态未改变。" } }
+      }
+    },
     "menu.checkForUpdates": {
       "extractionState": "manual",
       "localizations": {

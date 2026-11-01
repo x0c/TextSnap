@@ -12,7 +12,7 @@ Press a shortcut, drag a region on screen, and the text in it lands in your clip
 
 > **macOS only.** TextSnap depends on macOS-only APIs (Vision, screen-capture permission, menu-bar extras) — there is no Windows or Linux version.
 
-![TextSnap Settings with shortcut, screen-recording status and login controls](docs/images/settings.png)
+![TextSnap Settings with shortcut, screen-recording status, login and menu-bar visibility controls](docs/images/settings.png)
 
 ## Features
 
@@ -51,7 +51,7 @@ xcodebuild -project TextSnap.xcodeproj -scheme TextSnap -configuration Release \
 2. Drag the region. Release to recognize, `Esc` to cancel.
 3. Paste anywhere — the text is already in your clipboard.
 
-Right-click the menu-bar icon for Settings: change the shortcut, check permission state, toggle Launch at Login, or copy the last result again. Settings live in `~/.config/textsnap/settings.json`; recognized text itself is memory-only and never written to disk.
+Right-click the menu-bar icon for Settings: change the shortcut, check permission state, toggle Launch at Login or menu-bar visibility, or copy the last result again. To hide the icon, choose Hide Menu Bar Icon from the menu or turn off Show Menu Bar Icon in Settings. Your shortcut keeps working; reopen TextSnap from Applications or Spotlight to restore the icon in Settings. Settings live in `~/.config/textsnap/settings.json`; recognized text itself is memory-only and never written to disk.
 
 ## FAQ
 

@@ -51,19 +51,43 @@ Limitations: the final installed interaction acceptance ran while the screen was
 
 ## Menu and settings parity
 
-- Right-click menu: Capture Now / Settings / Launch at Login (tri-state) / Check for Updates / About / Quit. No hide-icon item.
-- The single settings window offers the same: shortcut editor, permission state, launch toggle, last result with Copy Again, capture / check updates / about / quit, version.
+- Right-click menu: Capture Now / Settings / Launch at Login (tri-state) / Hide Menu Bar Icon / Check for Updates / About / Quit.
+- The single settings window offers the same: shortcut editor, permission state, launch toggle, Show Menu Bar Icon switch, last result with Copy Again, capture / check updates / about / quit, version.
 - Left click is Capture Now.
+
+## Menu bar icon visibility (owner correction 2026-11-01)
+
+TextSnap has a global capture shortcut and a single Settings recovery surface, so it qualifies for optional menu-bar visibility under the shared macOS lifecycle guide. The owner's correction supersedes the former product prohibition on hiding the icon.
+
+- Default: visible. The menu's Hide Menu Bar Icon action and Settings' Show Menu Bar Icon native switch share one persisted `menuBar.iconVisible` preference in the existing settings JSON. Old settings files without this key retain their shortcut and default to visible.
+- Hiding only removes the status item: no new window, confirmation or notification; capture shortcuts and background readiness continue unchanged. An already-open Settings window remains usable.
+- Reopening the app from Applications or Spotlight while hidden presents the existing Settings window, even if the process originally started as a login item or has been running longer than 60 seconds. A user-initiated cold launch while hidden also presents Settings. Login launches remain silent, and visible-icon first launch remains silent.
+- Settings restores the icon immediately and retains every menu action. No separate recovery window, new settings pane or icon-artwork change.
+- If saving visibility fails, retain the prior visibility and show an actionable localized error rather than claim the preference was saved.
+
+Reference selection: inspected this product's existing General Toggle row and status-menu command construction, plus its resolved MacKit `StatusItemController.isIconVisible` and `MenuBarReopenPolicy`. Reuse the existing native SwiftUI `Toggle`/grouped Form and MacKit's AppKit `NSMenuItem` actions; only add the product preference and recovery wiring. Apple's [NSStatusItem.isVisible](https://developer.apple.com/documentation/appkit/nsstatusitem/isvisible) shows/hides a status item, and the installed Xcode 27.2 SDK declares it from macOS 10.12. No new dependency or custom control is needed.
+
+Acceptance: inspect the menu and complete Settings in English/Chinese and light/dark; hide without opening a window, verify shortcut availability, reopen and restore from Settings, and repeat after restart. Confirm old-file compatibility, persistence, failed saves and silent-login/user-reopen policy separately. Opening Settings is authorized only for this changed surface's acceptance, not as part of overwrite-install launch.
 
 ## Settings layout (2026-10-18)
 
-The October 18 settings revision authorized opening this surface for that revision's installed visual acceptance; the normal silent-launch contract still applies to later tasks. Use one public SwiftUI `Settings` scene, with a 480-point native grouped `Form` sized to its measured content. Four groups contain Capture (shortcut, screen-recording state and Capture Now), Last Result (memory-only text, at most four visible lines, plus Copy Again), General (the existing launch-at-login switch), and the app icon/name/version with About, Check for Updates and Quit. Preserve every existing menu/settings action; do not add a menu-icon visibility setting.
+The October 18 settings revision authorized opening this surface for that revision's installed visual acceptance; the normal silent-launch contract still applies to later tasks. Use one public SwiftUI `Settings` scene, with a 480-point native grouped `Form` sized to its measured content. Four groups contain Capture (shortcut, screen-recording state and Capture Now), Last Result (memory-only text, at most four visible lines, plus Copy Again), General (launch-at-login and menu-bar visibility switches), and the app icon/name/version with About, Check for Updates and Quit. Preserve every existing menu/settings action; menu-bar visibility follows the November 1 owner correction above.
 
 Replace stacked GroupBoxes and standalone action rows with native `Section`, `LabeledContent`, `Toggle`, `Button` and `Menu`. Keep shortcut editing on the existing recorder; its native value button starts recording and its action menu clears or restores the shortcut. Move ordinary recording guidance to help; show conflicts, denied permissions and pending login approval inline. The empty last-result message must not hardcode the factory shortcut because the user can change it. No custom backgrounds, focus frames or control lookalikes. Settings do not scroll; content height follows permission/error/result changes. Escape cancels recording first and otherwise closes Settings. Keep the existing autosave name and MacKit accessory activation session. Preserve the old controller’s visible-screen clamp when attaching the native scene, after content resizing and when it becomes key. A saved window may lie between displays after the display arrangement changes: an isolated window capture still renders its offscreen body, so actual pointer acceptance must confirm that the whole frame is inside a current visible screen.
 
 Reference selection: inspected this product's actual SettingsView, window controller and shortcut/permission/login implementations. Retain their business actions and state, and apply the grouped-Form/content-height recipe in the shared macOS settings and AppKit guides; no other product source is imported. Apple's public [Settings](https://developer.apple.com/documentation/swiftui/settings), [Form](https://developer.apple.com/documentation/swiftui/form) and [LabeledContent](https://developer.apple.com/documentation/swiftui/labeledcontent) APIs fit this macOS 26+ target and are present in the installed Xcode 27.2 SDK. The app's icon is governed by the App icon section below.
 
 Acceptance: inspect the installed window in dark English and light Chinese, including keyboard/AX labels, recording cancellation, permission status, and the about/update actions. Verify settings opens only from explicit entry points, returns to accessory mode when closed, and restores position on normal restart. Run the existing tests and complete Release build/analyze diagnostics. Public signed distribution requires meaningful bilingual release and update notes; the coordinator commits before the archive/install and publishes the whole current workspace.
+
+## Installed acceptance (0.2.6)
+
+The Developer ID Release build was installed at `/Applications/TextSnap.app` and kept its existing launch-at-login registration. Real right-click displayed Hide Menu Bar Icon; activating it left zero windows and removed the status menu, with `menuBar.iconVisible = false` on disk. The global shortcut still opened the system selector while hidden; Escape cancelled without recognizing screen content. Reopen and a fresh user cold launch both presented the same Settings window with visibility off; its native switch restored the status item. The original shortcut and login preference were preserved, and visibility was returned to its default visible state after verification.
+
+Fresh installed captures show the complete 480 × 500-point Settings surface in English/light, English/dark and Chinese/light, plus the real status menu. The two General switches align, all four groups fit without scrolling, and the new switch has the correct AX label and value. Launch arguments did not change appearance on this host; those nominal dark captures remain rejected. The accepted dark capture used a bounded system appearance change, with the original appearance restored in `finally`. README imagery was refreshed from the installed app.
+
+Thirteen non-presenting tests passed through native `xctest` after `xcodebuild build-for-testing`; the app's Debug dylib was loaded without launching the build-tree app, avoiding the known login-item redirection. Coverage includes old settings, visibility persistence, shortcut preservation, file permissions, failed-save rollback and login versus user recovery policy. Debug and Release universal arm64/x86_64 build and analyze completed with zero compiler/analyzer warnings; tests executed on arm64 only. Complete task evidence is under ignored `build/menubar-visibility/`.
+
+Limits: an actual login/logout cycle and VoiceOver traversal were not performed. Accessibility Inspector was launched for the deferred audit, but Show Main Window and File → New both yielded no AX window, so no audit report was produced; the AX label/value checks do not replace that audit. A host-independent Inspector/audit entry remains an environment follow-up. Public notarization and final-asset acceptance are pending the release pipeline; this initial installed build is not the notarized public export.
 
 ## App icon
 

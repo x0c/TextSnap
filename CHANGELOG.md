@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.6
+
+- Add Hide Menu Bar Icon to the status menu and a matching Show Menu Bar Icon switch in Settings. The preference survives restart without changing your capture shortcut.
+- Keep capture available through the shortcut while hidden. Reopening TextSnap from Applications or Spotlight brings back the same Settings window so you can restore the icon; login launches remain silent.
+
+### 简体中文
+
+- 右键菜单新增“隐藏菜单栏图标”，设置中新增对应的“显示菜单栏图标”开关。重启后保留显隐选择，不改变原有识别快捷键。
+- 图标隐藏后仍可用快捷键识别；从“应用程序”或 Spotlight 再次打开 TextSnap，会显示同一设置窗以恢复图标。开机自启动仍保持静默。
+
 ## 0.2.5
 
 - Register the global shortcut before any other launch work, retry failed registrations with backoff, and re-assert it after wake, unlock, session activation and during the first 90 seconds of a login session. The shortcut no longer stays dead while the system settles.

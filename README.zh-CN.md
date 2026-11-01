@@ -12,7 +12,7 @@
 
 > **仅支持 macOS。** TextSnap 依赖 macOS 专有能力（Vision、屏幕录制授权、菜单栏），没有 Windows / Linux 版。
 
-![TextSnap 设置中的快捷键、屏幕录制权限和开机自启](docs/images/settings.png)
+![TextSnap 设置中的快捷键、屏幕录制权限、开机自启和菜单栏图标开关](docs/images/settings.png)
 
 ## 功能
 
@@ -51,7 +51,7 @@ xcodebuild -project TextSnap.xcodeproj -scheme TextSnap -configuration Release \
 2. 拖出区域。松手即识别，`Esc` 取消。
 3. 直接粘贴 —— 文字已经在剪贴板里了。
 
-右键点菜单栏图标进设置：改快捷键、看授权状态、开关机自启、复制上一次的结果。设置存在 `~/.config/textsnap/settings.json`；识别出的文字只放内存，从不写盘。
+右键点菜单栏图标进设置：改快捷键、看授权状态、开关机自启或菜单栏图标、复制上一次的结果。在菜单选“隐藏菜单栏图标”，或在设置中关闭“显示菜单栏图标”，即可隐藏图标。快捷键仍可用；从“应用程序”或 Spotlight 再次打开 TextSnap，即可在设置中恢复图标。设置存在 `~/.config/textsnap/settings.json`；识别出的文字只放内存，从不写盘。
 
 ## 常见问题
 

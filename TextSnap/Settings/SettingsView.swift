@@ -5,6 +5,7 @@ struct SettingsView: View {
     @ObservedObject private var hotkeyManager = HotkeyManager.shared
     @Bindable private var launchAtLogin = LaunchAtLoginManager.shared
     @Bindable private var engine = CaptureEngine.shared
+    @Bindable private var settings = TextSnapSettings.shared
     @State private var permissionGranted = ScreenCapturePermission.isGranted
     @State private var contentHeight: CGFloat = 400
 
@@ -56,6 +57,11 @@ struct SettingsView: View {
                         .font(.caption)
                         .foregroundStyle(.red)
                 }
+                Toggle(String(localized: "settings.menuBar.showIcon"), isOn: Binding(
+                    get: { settings.isMenuBarIconVisible },
+                    set: { AppDelegate.shared?.setMenuBarIconVisible($0) }
+                ))
+                .help(String(localized: "settings.menuBar.recoveryHint"))
             }
             Section { aboutRow }
         }
