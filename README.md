@@ -30,7 +30,7 @@ macOS 26 (Tahoe) and later, Apple silicon and Intel. No Windows or Linux version
 
 ## Install
 
-Download the signed `.dmg` from the [latest release](https://github.com/x0c/TextSnap/releases/latest), open it, drag TextSnap to Applications, and launch it once. First launch is silent — look for the viewfinder icon in the menu bar, then press `⌘⇧2`.
+Download the signed `.dmg` from the [latest release](https://github.com/x0c/TextSnap/releases/latest), open it, drag TextSnap to Applications, and launch it once. First launch is silent — look for TextSnap in the menu bar, then press `⌘⇧2`.
 
 
 Pressing the shortcut the first time asks for Screen Recording permission; without it TextSnap cannot see the region you select. If you denied it earlier, Settings offers a one-tap jump back to System Settings.

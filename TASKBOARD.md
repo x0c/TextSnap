@@ -4,4 +4,4 @@
 
 | 任务 | 状态 | 影响范围 | 开始 | 最近更新 | 备注 |
 |---|---|---|---|---|---|
-| Pi: add menu-bar icon visibility and recovery | 进行中 | TextSnap settings/delegate/localization/tests, product docs, release; Xcode + MacKit + signing | 16:25 | 2026-11-01 16:44 | Installed UI and 13 tests passed; publishing 0.2.6 (8), logs/publish-v0.2.6.log |
+| Pi: quote-silhouette menu-bar icon | 验证中 | Status icon assets/loading, product contract, tests, release; Xcode + MacKit + Developer ID | 17:22 | 2026-11-03 17:33 | PNG audits + universal Debug build/analyze passed; build/quote-icon/. Reclaimed interrupted 0.2.6 release entry. |

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+  <!-- Traced from AppIcon-1024.png: rising opening-quote tips and round lower bodies.
+       Optical separation keeps the two silhouettes distinct at 18 points.
+       Render at 18px and 36px with rsvg-convert; do not include the app-icon shadows. -->
+  <defs>
+    <path id="quote" d="M 289 1
+      C 304 -3 316 9 318 25
+      C 320 39 320 57 317 72
+      C 314 88 304 96 287 108
+      C 245 137 207 180 190 225
+      C 180 251 189 257 214 255
+      C 267 253 304 285 317 333
+      C 331 382 321 440 296 480
+      C 269 522 229 545 182 551
+      C 129 558 80 542 47 507
+      C 11 466 0 417 0 363
+      C -2 289 15 222 55 159
+      C 106 83 199 27 269 4
+      C 276 2 283 1 289 1 Z"/>
+  </defs>
+  <g fill="#000000" transform="translate(1 2.1) scale(0.0225 0.025)">
+    <use href="#quote"/>
+    <use href="#quote" transform="translate(390 0)"/>
+  </g>
+</svg>

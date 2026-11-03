@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.7
+
+- Replace the menu-bar capture symbol with a silhouette of the App Icon's paired opening quotation marks. The system tints the transparent template for light and dark menu bars.
+- Keep left-click capture, the right-click menu and icon visibility behavior unchanged.
+
+### 简体中文
+
+- 菜单栏图标换为应用图标中成对开引号的剪影；透明模板由系统着色，适配浅色和深色菜单栏。
+- 左键框选、右键菜单和图标显隐行为保持不变。
+
 ## 0.2.6
 
 - Add Hide Menu Bar Icon to the status menu and a matching Show Menu Bar Icon switch in Settings. The preference survives restart without changing your capture shortcut.

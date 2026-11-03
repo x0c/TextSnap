@@ -91,13 +91,27 @@ Limits: an actual login/logout cycle and VoiceOver traversal were not performed.
 
 ## App icon
 
-The owner selected Native 02 from the October 4 native previews: a pair of blue glass opening quotation marks on a pale silver-white background. Refine this exact direction and adopt it as the application icon. Preserve the paired silhouette, composition, blue/cyan highlights, pale background and shallow glass depth; improve curves, edges, lighting and small-size clarity, and remove the direction-board border. This selection supersedes the later unselected sticker/eyedropper exploration. The menu-bar viewfinder remains its existing independent template symbol.
+The owner selected Native 02 from the October 4 native previews: a pair of blue glass opening quotation marks on a pale silver-white background. Refine this exact direction and adopt it as the application icon. Preserve the paired silhouette, composition, blue/cyan highlights, pale background and shallow glass depth; improve curves, edges, lighting and small-size clarity, and remove the direction-board border. This selection supersedes the later unselected sticker/eyedropper exploration. The menu-bar icon follows the quote-silhouette requirement below; the former independent viewfinder is superseded.
 
 Owner correction: Icon Composer is prohibited for TextSnap. Preserve the selected artwork's translucent glass, internal light and cast shadows in the raster master. Do not redraw it as vector shapes, flatten blue color variations or replace its material with system-generated effects. This explicit product decision supersedes the shared layered-icon requirement for this product. The attempted vector/composer reinterpretation was rejected and must not ship.
 
 Keep `design/app-icon/AppIcon-1024.png`, the PNG files in `TextSnap/Assets.xcassets/AppIcon.appiconset/` and the public README icon synchronized with the unchanged refined raster. The existing `.icon` directory is inactive legacy material and excluded from the target. Asset conversion may resize and encode; it must preserve artwork, color, composition and shadows.
 
 Reference: inspected the actual Native 02 preview and its raster refinement. Use the raster directly through the existing macOS asset catalog. The automated contrast heuristic splits the smooth blue foreground into quantized bins below its 4% per-bin cutoff and consequently compares two pale background bins (1.18:1), despite a 48px luminance span of 4.49:1 and 15.4% high-contrast pixels, and a 24px span of 3.99:1 and 14.2% high-contrast pixels. Retain that failed heuristic result as a limitation; do not alter the owner's selected material to make color quantization pass. Inspect the actual 24px/48px artwork and installed Finder icon for recognition and retained shadows.
+
+## Menu-bar icon artwork (owner request 2026-11-03)
+
+Replace the viewfinder with a monochrome silhouette traced from the actual blue-glass App Icon. Preserve both opening quotes, their upward/right-pointing curved tips, rounded lower bodies, aligned height and separation. Remove the pale background, glass highlights and cast shadows only in the menu-bar derivative; the App Icon raster remains unchanged. Use solid black shapes with transparent antialiasing and system template tinting, not a Unicode quote or substitute SF Symbol. Widen the narrow inter-quote gap optically at 18pt so the two bodies remain distinct.
+
+Reference selection: use `design/app-icon/AppIcon-1024.png` as the geometry reference and retain this product's existing MacKit `StatusItemController`/AppKit status button implementation. Replace only its image with an 18pt Asset Catalog template containing 1x/2x PNGs; retain left-click capture, right-click menu, visibility and accessibility labeling. Apple's [NSImage.isTemplate](https://developer.apple.com/documentation/appkit/nsimage/istemplate) defines black/clear template imagery and is available in the installed macOS SDK. No new UI component or runtime dependency is needed.
+
+Acceptance: compare the source crop to the actual 18px/36px derivative on light, dark and checkerboard backgrounds; audit transparency and solid-black cores; inspect compiled/installed template renditions and fresh light/dark menu-bar captures; exercise left-click capture and right-click menu without changing settings or clipboard content.
+
+## Quote-silhouette verification (0.2.7)
+
+Both 18px and 36px PNGs pass the template audit (pure black visible RGB, transparent corners, 93/457 fully opaque pixels). The inspected source/18px comparison retains the rising curved tips and rounded bodies with an optically widened gap. Compiled Debug and Release catalogs contain both transparent template renditions. Clean universal arm64/x86_64 Debug and Release build/analyze completed without compiler or analyzer warnings. Fourteen non-presenting tests passed on arm64 via native `xctest`, including loading the actual catalog template and checking both solid quote bodies and transparent separation; no build-tree app was launched.
+
+The local build is 0.2.7 (9). Public publication remains paused under the current global release policy; this cosmetic change does not authorize a new public release. Installed visual and interaction evidence is recorded after local delivery. The App Icon master and existing capture/menu dispatch code are unchanged.
 
 ## Storage
 

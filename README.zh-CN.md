@@ -30,7 +30,7 @@
 
 ## 安装
 
-从 [最新版本](https://github.com/x0c/TextSnap/releases/latest)下载已签名的 `.dmg`，打开后把 TextSnap 拖进 Applications，启动一次。首次启动是静默的 —— 去菜单栏找取景框图标，然后按 `⌘⇧2`。
+从 [最新版本](https://github.com/x0c/TextSnap/releases/latest)下载已签名的 `.dmg`，打开后把 TextSnap 拖进 Applications，启动一次。首次启动是静默的 —— 去菜单栏找到 TextSnap，然后按 `⌘⇧2`。
 
 
 第一次按快捷键会申请屏幕录制权限；没有它，TextSnap 看不见你框选的区域。如果之前拒绝过，设置里可一键跳回系统设置打开。
