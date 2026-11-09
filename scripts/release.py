@@ -7,6 +7,7 @@ The xcconfig version and matching bilingual CHANGELOG section must already exist
     scripts/release.py --wait                # wait for that background run
     scripts/release.py                       # foreground full release
     scripts/release.py --verify-only         # resume after publication; no rebuild
+    scripts/release.py --resume-notary ID    # resume an existing Apple submission
     scripts/release.py --verify-only --no-install
 """
 from __future__ import annotations
@@ -19,6 +20,7 @@ import os
 from pathlib import Path
 import plistlib
 import re
+import runpy
 import shutil
 import subprocess
 import sys
@@ -92,23 +94,70 @@ def release_assets(tag: str) -> list[str]:
     return sorted(result.stdout.split())
 
 
-def publish(work: Path, tag: str, source: str) -> list[Path]:
-    dirty = capture(["git", "status", "--porcelain"]).stdout.splitlines()
-    unexpected = [line for line in dirty if line[3:] != "TASKBOARD.md"]
-    if unexpected:
-        raise RuntimeError("Commit source changes before release:\n" + "\n".join(unexpected))
-    if capture(["git", "rev-parse", "HEAD"]).stdout.strip() != source:
-        raise RuntimeError("HEAD changed during release")
-    if run(["git", "rev-parse", "--verify", f"refs/tags/{tag}"], check=False).returncode != 0:
-        run(["git", "tag", tag, source])
-    if capture(["git", "rev-parse", f"{tag}^{{commit}}"]).stdout.strip() != source:
-        raise RuntimeError(f"Local tag {tag} does not point at the tested source {source}")
+def resume_publication(work: Path, tag: str, submission_id: str) -> None:
+    """Resume an existing Apple submission; never rebuild or resubmit it."""
+    ns = runpy.run_path(str(PUBLISHER))
+    ns["load_local_notary_env"]()
+    creds = ns["check_notary_creds"]()
+    dmg = work / f"TextSnap-{version()[0]}.dmg"
+    app = work / "export/TextSnap.app"
+    if not dmg.is_file() or not app.is_dir():
+        raise RuntimeError("Signed app/DMG are missing; cannot resume notarization")
+    deadline = time.time() + 4 * 3600
+    failures = 0
+    while True:
+        result = ns["capture"]([
+            "xcrun", "notarytool", "info", submission_id,
+            "--key", creds["key"], "--key-id", creds["key_id"],
+            "--issuer", creds["issuer"], "--output-format", "json",
+        ])
+        try:
+            status = json.loads(result.stdout or "{}").get("status", "")
+        except json.JSONDecodeError:
+            status = ""
+        if status == "Accepted":
+            break
+        if status == "Invalid":
+            raise RuntimeError(f"Apple rejected existing notarization {submission_id}")
+        failures = 0 if status else failures + 1
+        if failures >= 10:
+            raise RuntimeError("notarytool info failed 10 times; resume the same submission later")
+        if time.time() > deadline:
+            raise RuntimeError(f"Notarization is still pending after 4 hours: {submission_id}")
+        print(f"Existing notarization {submission_id}: {status or 'query failed'}; waiting", flush=True)
+        time.sleep(30)
+    run(["xcrun", "stapler", "staple", str(dmg)])
+    ns["final_gatekeeper_checks"](app, dmg, False)
+    ns["dmg_smoke"](dmg)
+    ns["ensure_tag_pushed"](tag)
+    if not ns["release_exists"](tag):
+        ns["create_empty_release"](tag, version()[0])
+    ns["upload_assets"](tag, [
+        dmg, work / "updates" / f"TextSnap-{version()[0]}.zip", work / "updates/appcast.xml"
+    ])
 
-    result = run([sys.executable, str(PUBLISHER), "--workdir", str(work)], check=False)
+
+def publish(work: Path, tag: str, source: str, resume_notary: str | None = None) -> list[Path]:
     marketing = version()[0]
     assets = [work / f"TextSnap-{marketing}.dmg",
               work / "updates" / f"TextSnap-{marketing}.zip",
               work / "updates/appcast.xml"]
+    if not resume_notary:
+        dirty = capture(["git", "status", "--porcelain"]).stdout.splitlines()
+        unexpected = [line for line in dirty if line[3:] != "TASKBOARD.md"]
+        if unexpected:
+            raise RuntimeError("Commit source changes before release:\n" + "\n".join(unexpected))
+        if capture(["git", "rev-parse", "HEAD"]).stdout.strip() != source:
+            raise RuntimeError("HEAD changed during release")
+    if run(["git", "rev-parse", "--verify", f"refs/tags/{tag}"], check=False).returncode != 0:
+        run(["git", "tag", tag, source])
+    if capture(["git", "rev-parse", f"{tag}^{{commit}}"]).stdout.strip() != source:
+        raise RuntimeError(f"Local tag {tag} does not point at the tested source {source}")
+    if resume_notary:
+        resume_publication(work, tag, resume_notary)
+        return assets
+
+    result = run([sys.executable, str(PUBLISHER), "--workdir", str(work)], check=False)
     present = release_assets(tag) if all(path.is_file() for path in assets) else []
     expected = sorted(path.name for path in assets)
     if present != expected:
@@ -223,8 +272,12 @@ def main() -> int:
     parser.add_argument("--background", action="store_true")
     parser.add_argument("--wait", action="store_true")
     parser.add_argument("--verify-only", action="store_true")
+    parser.add_argument("--resume-notary", metavar="SUBMISSION_ID",
+                        help="wait for an existing Apple DMG submission, then publish without rebuilding")
     parser.add_argument("--no-install", action="store_true")
     args = parser.parse_args()
+    if args.verify_only and args.resume_notary:
+        parser.error("--verify-only and --resume-notary are mutually exclusive")
     if args.wait:
         with lock_path.open("r") as lock:
             fcntl.flock(lock.fileno(), fcntl.LOCK_SH)
@@ -234,6 +287,8 @@ def main() -> int:
         argv = [sys.executable, str(Path(__file__).resolve())]
         if args.verify_only:
             argv.append("--verify-only")
+        if args.resume_notary:
+            argv.extend(["--resume-notary", args.resume_notary])
         if args.no_install:
             argv.append("--no-install")
         log_path = evidence / "release.log"
@@ -263,9 +318,11 @@ def main() -> int:
                       work / "updates" / f"TextSnap-{marketing}.zip",
                       work / "updates/appcast.xml"]
         else:
-            source = capture(["git", "rev-parse", "HEAD"]).stdout.strip()
+            source = capture(["git", "rev-parse", f"{tag}^{{commit}}" if args.resume_notary else "HEAD"]).stdout.strip()
             receipt["source_commit"] = source
-            assets = publish(work, tag, source)
+            if args.resume_notary:
+                receipt["resume_notary"] = args.resume_notary
+            assets = publish(work, tag, source, args.resume_notary)
         assets, details = verify(marketing, build, tag, work, evidence)
         receipt.update(details)
         save(receipt_path, receipt)
