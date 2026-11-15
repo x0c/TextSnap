@@ -244,7 +244,7 @@ def install(dmg: Path, marketing: str, build: str, evidence: Path) -> dict:
     visible = True
     if settings.is_file():
         data = json.loads(settings.read_text())
-        visible = data.get("menuBar", {}).get("iconVisible", True)
+        visible = data.get("menuBar.iconVisible", True)
     if visible:
         run(["open", str(installed)])
         time.sleep(3)

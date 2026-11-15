@@ -125,6 +125,14 @@ Fresh isolated WindowServer menu-bar captures show the installed paired quote si
 
 During the earlier pre-release visual acceptance, the user's preference had the icon hidden and the app was not running. That acceptance used a temporary XDG configuration with a visible icon, then stopped that acceptance process and restored the original system appearance; no virtual display or Settings window was opened. The subsequent public installation used the real profile, preserved its visible-icon preference and settings hash, and left the installed app running without opening Settings.
 
+## Installed acceptance (0.2.8)
+
+Source commit `535c405`. Eighteen non-presenting tests passed on arm64 through native `xctest` (including the four new launch-classification/recovery cases); clean Debug and Release builds completed with zero compiler warnings. A user `open` of the installed 0.2.8 with the icon hidden produced `launchEvent=0x6F617070 loginLaunch=false iconVisible=false recoveryWindow=true` and presented Settings, so the recovery contract still works. The real login branch was not exercised in a logout/login cycle: the next login must log `loginLaunch=true` with no window. This remains the acceptance gap for the reported symptom, because a launchd/LoginItemsLauncher start cannot be reproduced inside an active session.
+
+The public [0.2.8 release](https://github.com/x0c/TextSnap/releases/tag/v0.2.8) carries the notarized/stapled DMG, signed update ZIP and build-10 appcast with bilingual notes. Anonymous full downloads matched the local SHA-256 hashes for all three assets (DMG `70603d8c…`, ZIP `ababfcf7…`, appcast `83873a9f…`), and the latest-feed appcast is byte-identical. The anonymously downloaded DMG installed version 0.2.8 / 10; deep/strict signature verification, `stapler validate` and `spctl` reported a notarized Developer ID app (this host still has security assessment disabled), and the installed process stayed alive with no visible window.
+
+Release-runner defect found during this delivery: `scripts/release.py` read `data.get("menuBar", {}).get("iconVisible", True)` while settings store the flat `menuBar.iconVisible` key. It therefore treated the hidden-icon profile as visible, opened the freshly installed app for the post-install check, and reported `Unexpected post-install Settings window` after the release and installation had already completed. The check now reads the flat key and skips the launch for a hidden icon, matching the product rule. The published artifact is unaffected; the runner's 0.2.8 receipt remains `failed` for that tooling reason rather than a delivery failure.
+
 ## Storage
 
 - Settings file: `~/.config/textsnap/settings.json` (`$XDG_CONFIG_HOME` aware). Last recognized text is memory-only, never written to disk.
