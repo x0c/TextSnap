@@ -27,11 +27,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// shortcut for minutes.
     func applicationWillFinishLaunching(_ notification: Notification) {
         AppDelegate.shared = self
-        let launchedAtLogin = LoginLaunchDetector.isLaunchedAsLoginItem
-        isLoginLaunch = launchedAtLogin
-        TextSnapLog.lifecycle.notice(
-            "willFinishLaunching loginLaunch=\(launchedAtLogin, privacy: .public)"
-        )
 
         HotkeyManager.shared.onHotKey = { [weak self] in
             Task { @MainActor in await self?.captureEngine.captureNow() }
@@ -89,15 +84,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             _ = ScreenCapturePermission.isGranted
         })
 
-        // Visible-icon first launch and every login launch stay silent.
+        // Classify the launch only here: AppKit still reports no Apple Event in
+        // applicationWillFinishLaunching, and an SMAppService login launch never
+        // gets one at all. Visible-icon first launch and every login launch stay silent.
+        let launchEventID = NSAppleEventManager.shared().currentAppleEvent.map {
+            String(format: "0x%08X", $0.eventID)
+        } ?? "none"
+        isLoginLaunch = LaunchClassification.isCurrentProcessLoginLaunch
         readyAt = Date()
-        TextSnapLog.lifecycle.notice(
-            "didFinishLaunching complete after \(TextSnapLog.milliseconds(since: launchStarted), privacy: .public)ms"
-        )
-        if MenuBarReopenPolicy.shouldShowRecoveryWindow(
-            iconVisible: TextSnapSettings.shared.isMenuBarIconVisible,
+        let iconVisible = TextSnapSettings.shared.isMenuBarIconVisible
+        let showsRecoveryWindow = MenuBarReopenPolicy.shouldShowRecoveryWindow(
+            iconVisible: iconVisible,
             isLoginLaunch: isLoginLaunch
-        ) {
+        )
+        TextSnapLog.lifecycle.notice(
+            "didFinishLaunching complete after \(TextSnapLog.milliseconds(since: launchStarted), privacy: .public)ms launchEvent=\(launchEventID, privacy: .public) loginLaunch=\(self.isLoginLaunch, privacy: .public) iconVisible=\(iconVisible, privacy: .public) recoveryWindow=\(showsRecoveryWindow, privacy: .public)"
+        )
+        if showsRecoveryWindow {
             showMainWindow()
         }
     }

@@ -69,6 +69,12 @@ Reference selection: inspected this product's existing General Toggle row and st
 
 Acceptance: inspect the menu and complete Settings in English/Chinese and light/dark; hide without opening a window, verify shortcut availability, reopen and restore from Settings, and repeat after restart. Confirm old-file compatibility, persistence, failed saves and silent-login/user-reopen policy separately. Opening Settings is authorized only for this changed surface's acceptance, not as part of overwrite-install launch.
 
+## Login launch silence (owner report 2026-11-15)
+
+The owner reported that after a reboot, with the menu-bar icon hidden and Launch at Login on, TextSnap opened its Settings window by itself. Root cause: the login-item check ran in `applicationWillFinishLaunching`, before AppKit dispatches the open-application Apple Event, so it always read false; the hidden-icon recovery rule then treated the login start as a user cold launch. An `SMAppService.mainApp` login start may additionally arrive with no launch event at all.
+
+Classify the launch in `applicationDidFinishLaunching` through `LaunchClassification`: a legacy `keyAELaunchedAsLogInItem` marker or a launch with no Apple Event counts as a login launch and stays silent. Finder, Dock, Spotlight and `open` deliver the open-application event and still present Settings when the icon is hidden, and `applicationShouldHandleReopen` still answers a user reopen. The lifecycle log records `launchEvent`, `loginLaunch`, `iconVisible` and `recoveryWindow` so the next real login can be checked without guessing.
+
 ## Settings layout (2026-10-18)
 
 The October 18 settings revision authorized opening this surface for that revision's installed visual acceptance; the normal silent-launch contract still applies to later tasks. Use one public SwiftUI `Settings` scene, with a 480-point native grouped `Form` sized to its measured content. Four groups contain Capture (shortcut, screen-recording state and Capture Now), Last Result (memory-only text, at most four visible lines, plus Copy Again), General (launch-at-login and menu-bar visibility switches), and the app icon/name/version with About, Check for Updates and Quit. Preserve every existing menu/settings action; menu-bar visibility follows the November 1 owner correction above.

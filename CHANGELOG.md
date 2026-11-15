@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.8
+
+- Stop the Settings recovery window from opening at login. TextSnap now classifies the launch after macOS has delivered its launch event, so a login-item start stays silent even while the menu-bar icon is hidden; reopening the app yourself still presents Settings.
+- Keep the hidden menu-bar icon recoverable: a user launch from Finder, Dock or Spotlight presents Settings, and the capture shortcut keeps working.
+
+### 简体中文
+
+- 修复开机登录时自行弹出设置窗的问题。改为在系统送达启动事件后判定启动来源，登录项启动保持静默，即使菜单栏图标已隐藏；你主动再次打开应用时仍会显示设置窗。
+- 菜单栏图标隐藏后仍可恢复：从 Finder、Dock 或 Spotlight 打开应用会显示设置窗，识别快捷键照常可用。
+
 ## 0.2.7
 
 - Replace the menu-bar capture symbol with a silhouette of the App Icon's paired opening quotation marks. The system tints the transparent template for light and dark menu bars.
