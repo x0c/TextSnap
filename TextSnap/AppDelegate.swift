@@ -2,6 +2,7 @@ import AppKit
 import MacKitCore
 import MacKitLifecycle
 import MacKitStatusItem
+import MacKitUpdater
 import SwiftUI
 
 @MainActor
@@ -12,6 +13,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var becomeActiveObserver: NSObjectProtocol?
     private var readyAt = Date()
     private var appUpdater: AppUpdater?
+    let updateAvailability = UpdateAvailabilityState()
     private var deferredStartupTasks: [Task<Void, Never>] = []
     private var isLoginLaunch = false
     private let terminationGuard = TerminationGuard()
@@ -179,7 +181,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func startUpdaterIfNeeded() {
         guard appUpdater == nil else { return }
         let started = DispatchTime.now()
-        appUpdater = AppUpdater()
+        appUpdater = AppUpdater(
+            availability: updateAvailability,
+            onAvailableVersionChange: { [weak self] _ in
+                self?.refreshCommands()
+            }
+        )
+        if updateAvailability.availableVersion != nil {
+            refreshCommands()
+        }
         TextSnapLog.lifecycle.notice(
             "updater started after \(TextSnapLog.milliseconds(since: started), privacy: .public)ms"
         )
@@ -190,7 +200,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func makeCommands() -> [StatusItemCommand] {
-        [
+        let updateTitle: String = if let version = updateAvailability.availableVersion {
+            String(format: String(localized: "menu.installUpdate"), version)
+        } else {
+            String(localized: "menu.checkForUpdates")
+        }
+        return [
             StatusItemCommand(title: String(localized: "menu.captureNow"), action: { [weak self] in
                 self?.captureNow()
             }),
@@ -213,7 +228,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.setMenuBarIconVisible(false)
             }),
             .separator(),
-            StatusItemCommand(title: String(localized: "menu.checkForUpdates"), action: { [weak self] in
+            StatusItemCommand(title: updateTitle, action: { [weak self] in
                 self?.checkForUpdates()
             }),
             StatusItemCommand(title: String(localized: "menu.about"), action: { [weak self] in

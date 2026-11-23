@@ -1,4 +1,5 @@
 import AppKit
+import MacKitUpdater
 import SwiftUI
 
 struct SettingsView: View {
@@ -162,7 +163,7 @@ struct SettingsView: View {
             .accessibilityLabel(String(localized: "menu.about"))
             .help(String(localized: "menu.about"))
             Spacer(minLength: 8)
-            Button(String(localized: "menu.checkForUpdates")) { AppDelegate.shared?.checkForUpdates() }
+            UpdateCheckButton(availability: AppDelegate.shared?.updateAvailability)
             Button(String(localized: "settings.quit")) { AppDelegate.shared?.requestTermination() }
         }
     }
@@ -170,5 +171,22 @@ struct SettingsView: View {
     private func refreshStatus() {
         permissionGranted = ScreenCapturePermission.isGranted
         launchAtLogin.refreshInBackground()
+    }
+}
+
+private struct UpdateCheckButton: View {
+    let availability: UpdateAvailabilityState?
+
+    var body: some View {
+        Button(title) {
+            AppDelegate.shared?.checkForUpdates()
+        }
+    }
+
+    private var title: String {
+        if let version = availability?.availableVersion {
+            return String(format: String(localized: "menu.installUpdate"), version)
+        }
+        return String(localized: "menu.checkForUpdates")
     }
 }

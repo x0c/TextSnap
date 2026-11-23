@@ -1,28 +1,31 @@
 import AppKit
 import Foundation
-import Sparkle
+import MacKitUpdater
 
 /// Public-update channel: Sparkle checks the signed feed on GitHub Releases.
-/// Never claims "up to date" on its own; Sparkle owns all update UI.
+/// Never claims "up to date" on its own; MacKitUpdater supplies gentle reminders and Sparkle owns update UI.
 @MainActor
 final class AppUpdater: NSObject {
-    private let updaterController: SPUStandardUpdaterController
+    private let checker: SparkleUpdateChecker
 
-    override init() {
-        updaterController = SPUStandardUpdaterController(
-            startingUpdater: true,
-            updaterDelegate: nil,
-            userDriverDelegate: nil
+    init(
+        availability: UpdateAvailabilityState,
+        onAvailableVersionChange: (@MainActor (String?) -> Void)? = nil
+    ) {
+        checker = SparkleUpdateChecker(
+            gentleReminderMode: .menuBarOnly,
+            availability: availability
         )
         super.init()
+        checker.onAvailableVersionChange = onAvailableVersionChange
     }
 
     var sessionInProgress: Bool {
-        updaterController.updater.sessionInProgress
+        checker.isSessionInProgress
     }
 
     @objc
     func checkForUpdates(_ sender: Any?) {
-        updaterController.checkForUpdates(sender)
+        checker.checkForUpdates(sender)
     }
 }

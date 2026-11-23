@@ -51,7 +51,7 @@ configFiles:
 packages:
   MacKit:
     url: https://github.com/x0c/mac-kit-swift
-    from: "0.1.4"
+    from: "0.1.5"
   Sparkle:
     url: https://github.com/sparkle-project/Sparkle
     from: "2.10.0"
@@ -101,6 +101,8 @@ targets:
         product: MacKitLifecycle
       - package: MacKit
         product: MacKitStatusItem
+      - package: MacKit
+        product: MacKitUpdater
       - package: Sparkle
         product: Sparkle
 

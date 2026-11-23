@@ -17,6 +17,8 @@
 	<string>WY7oGn+TRpgB35qXPPpVkwOrHcQx0g57DVTbZymFK1E=</string>
 	<key>SUEnableAutomaticChecks</key>
 	<true/>
+	<key>SUAutomaticallyUpdate</key>
+	<false/>
 	<key>SURequireSignedFeed</key>
 	<true/>
 	<key>SUVerifyUpdateBeforeExtraction</key>

@@ -206,6 +206,23 @@
         }
       }
     },
+    "menu.installUpdate": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Install Update (%@)…"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "安装 %@ 更新…"
+          }
+        }
+      }
+    },
     "menu.about": {
       "extractionState": "manual",
       "localizations": {
