@@ -31,12 +31,13 @@ struct CaptureTextIntent: AppIntent {
 
     @MainActor
     func perform() async throws -> some IntentResult & ReturnsValue<String> {
-        await CaptureEngine.shared.captureNow()
-        let text = CaptureEngine.shared.lastText
-        guard !text.isEmpty else {
+        let outcome = await CaptureEngine.shared.captureNow(source: .appIntent)
+        switch outcome {
+        case .copied(let text):
+            return .result(value: text)
+        case .cancelled, .empty, .permissionDenied, .failed, .droppedInFlight:
             throw CaptureIntentError.noText
         }
-        return .result(value: text)
     }
 }
 

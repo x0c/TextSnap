@@ -29,9 +29,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// shortcut for minutes.
     func applicationWillFinishLaunching(_ notification: Notification) {
         AppDelegate.shared = self
+        guard !E2ERuntime.isEnabled else { return }
 
         HotkeyManager.shared.onHotKey = { [weak self] in
-            Task { @MainActor in await self?.captureEngine.captureNow() }
+            Task { @MainActor in await self?.captureEngine.captureNow(source: .hotkey) }
         }
         HotkeyManager.shared.startFromLaunch()
     }
@@ -39,6 +40,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         let launchStarted = DispatchTime.now()
         AppDelegate.shared = self
+        logStartupBanner()
+
+        if E2ERuntime.isEnabled {
+            terminationGuard.allowTermination = true
+            NSApp.appearance = NSAppearance(named: .aqua)
+            SettingsWindowController.shared.showForE2E()
+            TextSnapLog.lifecycle.notice(
+                "e2e launch ready after \(TextSnapLog.milliseconds(since: launchStarted))ms"
+            )
+            return
+        }
+
         terminationGuard.isUpdateSessionInProgress = { [weak self] in
             self?.appUpdater?.sessionInProgress ?? false
         }
@@ -46,7 +59,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItemController = StatusItemController(
             commands: makeCommands(),
             onPrimaryAction: { [weak self] in
-                Task { @MainActor in await self?.captureEngine.captureNow() }
+                Task { @MainActor in await self?.captureEngine.captureNow(source: .menuBarLeftClick) }
             }
         )
         statusItemController?.setTemplateImage(
@@ -55,7 +68,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         )
         statusItemController?.isIconVisible = TextSnapSettings.shared.isMenuBarIconVisible
         TextSnapLog.lifecycle.notice(
-            "status item ready after \(TextSnapLog.milliseconds(since: launchStarted), privacy: .public)ms"
+            "status item ready after \(TextSnapLog.milliseconds(since: launchStarted))ms"
         )
 
         becomeActiveObserver = NotificationCenter.default.addObserver(
@@ -79,11 +92,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             guard !Task.isCancelled else { return }
             self?.startUpdaterIfNeeded()
         })
-        deferredStartupTasks.append(Task.detached(priority: .utility) {
-            TextRecognizer.warmUp()
+        deferredStartupTasks.append(Task {
+            try? await Task.sleep(for: .milliseconds(1500))
+            guard !Task.isCancelled else { return }
+            await Task.detached(priority: .userInitiated) {
+                TextRecognizer.warmUp()
+            }.value
         })
         deferredStartupTasks.append(Task.detached(priority: .utility) {
             _ = ScreenCapturePermission.isGranted
+            ScreenCapture.cleanupOrphanedTempFiles()
         })
 
         // Classify the launch only here: AppKit still reports no Apple Event in
@@ -100,7 +118,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             isLoginLaunch: isLoginLaunch
         )
         TextSnapLog.lifecycle.notice(
-            "didFinishLaunching complete after \(TextSnapLog.milliseconds(since: launchStarted), privacy: .public)ms launchEvent=\(launchEventID, privacy: .public) loginLaunch=\(self.isLoginLaunch, privacy: .public) iconVisible=\(iconVisible, privacy: .public) recoveryWindow=\(showsRecoveryWindow, privacy: .public)"
+            "didFinishLaunching complete after \(TextSnapLog.milliseconds(since: launchStarted))ms launchEvent=\(launchEventID) loginLaunch=\(self.isLoginLaunch) iconVisible=\(iconVisible) recoveryWindow=\(showsRecoveryWindow)"
         )
         if showsRecoveryWindow {
             showMainWindow()
@@ -116,6 +134,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        guard !E2ERuntime.isEnabled else { return true }
         if MenuBarReopenPolicy.presentation(
             iconVisible: statusItemController?.isIconVisible ?? TextSnapSettings.shared.isMenuBarIconVisible,
             isReopenOrLaunch: true,
@@ -130,12 +149,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        TextSnapLog.lifecycle.notice("application terminating")
         deferredStartupTasks.forEach { $0.cancel() }
         deferredStartupTasks = []
         HotkeyManager.shared.unregister()
         if let becomeActiveObserver {
             NotificationCenter.default.removeObserver(becomeActiveObserver)
         }
+        TextSnapLog.flush()
     }
 
     func requestTermination(terminate: () -> Void = { NSApplication.shared.terminate(nil) }) {
@@ -149,6 +170,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func setMenuBarIconVisible(_ visible: Bool) {
         guard TextSnapSettings.shared.setMenuBarIconVisible(visible) else {
+            TextSnapLog.settings.error("menuBar iconVisible save failed target=\(visible)")
             let alert = NSAlert()
             alert.messageText = String(localized: "settings.menuBar.saveFailed.title")
             alert.informativeText = String(localized: "settings.menuBar.saveFailed.body")
@@ -157,10 +179,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         statusItemController?.isIconVisible = visible
+        TextSnapLog.settings.notice("menuBar iconVisible set to \(visible)")
     }
 
-    func captureNow() {
-        Task { @MainActor in await captureEngine.captureNow() }
+    func captureNow(source: CaptureEngine.CaptureSource = .menuBarMenu) {
+        Task { @MainActor in await captureEngine.captureNow(source: source) }
     }
 
     func checkForUpdates() {
@@ -174,6 +197,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             .applicationName: "TextSnap",
             .credits: NSAttributedString(string: String(localized: "about.credits")),
         ])
+    }
+
+    private func logStartupBanner() {
+        let info = Bundle.main.infoDictionary ?? [:]
+        let version = (info["CFBundleShortVersionString"] as? String) ?? "?"
+        let build = (info["CFBundleVersion"] as? String) ?? "?"
+        let os = ProcessInfo.processInfo.operatingSystemVersionString
+        let pid = ProcessInfo.processInfo.processIdentifier
+        let shortcutDesc = HotkeyManager.shared.shortcut?.displayName ?? "none"
+        TextSnapLog.lifecycle.notice(
+            "app_start version=\(version) build=\(build) os=\"\(os)\" pid=\(pid) iconVisible=\(TextSnapSettings.shared.isMenuBarIconVisible) hotkey=\(shortcutDesc) secureInput=\(HotkeyManager.isSecureEventInputActive) e2e=\(E2ERuntime.isEnabled)"
+        )
     }
 
     /// Sparkle starts after the app is usable; its startup performs bundle and
@@ -191,7 +226,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             refreshCommands()
         }
         TextSnapLog.lifecycle.notice(
-            "updater started after \(TextSnapLog.milliseconds(since: started), privacy: .public)ms"
+            "updater started after \(TextSnapLog.milliseconds(since: started))ms"
         )
     }
 
@@ -207,7 +242,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         return [
             StatusItemCommand(title: String(localized: "menu.captureNow"), action: { [weak self] in
-                self?.captureNow()
+                self?.captureNow(source: .menuBarMenu)
             }),
             StatusItemCommand(title: String(localized: "menu.settings"), keyEquivalent: ",", action: { [weak self] in
                 self?.showMainWindow()

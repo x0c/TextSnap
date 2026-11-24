@@ -14,8 +14,16 @@ enum ScreenCapturePermission {
     }
 
     static func openSystemSettings() {
-        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
-            NSWorkspace.shared.open(url)
+        let specific = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")
+        let fallback = URL(string: "x-apple.systempreferences:com.apple.preference.security")
+        if let specific, NSWorkspace.shared.open(specific) {
+            TextSnapLog.settings.notice("opened System Settings Privacy_ScreenCapture")
+            return
         }
+        if let fallback, NSWorkspace.shared.open(fallback) {
+            TextSnapLog.settings.notice("opened System Settings privacy root fallback")
+            return
+        }
+        TextSnapLog.settings.error("failed to open System Settings for screen recording")
     }
 }

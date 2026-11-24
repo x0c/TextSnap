@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.2.9
+
+- Fix the macOS 27 Vision E5RT recognition failure (`CRImageReaderError.e5rtError(..., 13)`) and startup freeze by switching to a `512×256` bilingual warm-up image, padding small crops (`< 256×160`), selecting explicit `.gpu` → `.cpu` compute devices with sRGB fallback, and automatically recovering via a headless `--ocr-once` worker process if E5RT is ever poisoned.
+- Keep global shortcuts responsive across captures and errors: release the in-flight lock before modal alerts (and dismiss stale alerts on a new press), run `/usr/sbin/screencapture` asynchronously with `stderr` error classification and sleep/session-resign cancellation, suspend active hotkeys while recording, add coalesced post-wake/unlock re-assertion, route `⌘Q` through the termination guard, and avoid stale results in Shortcuts (`CaptureTextIntent`).
+- Add dual-sink, privacy-safe observability logs (`~/.config/textsnap/logs/textsnap.log`, mode `700`/`600`, 2 MB × 3 rotation, plus Unified Logging `top.caozc.TextSnap`) recording startup state, capture correlation IDs, trigger source, blocked-phase diagnostics, selector dimensions/stderr, and OCR compute device/timing without logging recognized text or clipboard contents.
+
+### 简体中文
+
+- 修复 macOS 27 下 Vision 持续报错（`CRImageReaderError.e5rtError(..., 13)`）与启动卡死问题：启动预热图改为 `512×256` 中英双语图像，为小尺寸框选（`< 256×160`）自动补白画布，显式优先 `.gpu` → `.cpu` 计算设备并支持 sRGB 归一化回退；若进程内仍发生 E5RT 异常，自动切到无界面 `--ocr-once` 子进程恢复识别。
+- 解决全局快捷键唤不出来的问题：弹出失败/空结果提示窗前释放采集锁（新触发自动关闭旧弹窗），改用异步 `screencapture` 监听 `stderr` 区分真实报错与 Esc 取消并在休眠/锁屏时自动取消卡住的框选，录制快捷键时暂停当前热键，唤醒/解锁后防抖重注册，修复设置窗打开时 `⌘Q` 无法退出的问题，并确保快捷指令不会返回旧结果。
+- 新增隐私安全的双通道可观测性日志（`~/.config/textsnap/logs/textsnap.log`，目录 700 / 文件 600，单文件 2 MB 保留 3 份，并同步输出到系统统一日志 `top.caozc.TextSnap`），记录启动状态、请求编号、触发来源、丢弃原因与阶段耗时、截图尺寸/错误输出及 OCR 设备与耗时，绝不记录识别文字或剪贴板内容。
+
 ## 0.2.8
 
 - Stop the Settings recovery window from opening at login. TextSnap now classifies the launch after macOS has delivered its launch event, so a login-item start stays silent even while the menu-bar icon is hidden; reopening the app yourself still presents Settings.

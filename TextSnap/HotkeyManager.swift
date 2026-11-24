@@ -103,6 +103,24 @@ final class HotkeyManager: ObservableObject {
         }
     }
 
+    private static let hotKeySignature = OSType(0x5453_4E50) // 'TSNP'
+
+    nonisolated static var isSecureEventInputActive: Bool {
+        IsSecureEventInputEnabled()
+    }
+
+    nonisolated static func carbonErrorName(for status: OSStatus) -> String {
+        switch Int(status) {
+        case Int(noErr): return "noErr"
+        case Int(eventHotKeyExistsErr): return "eventHotKeyExistsErr"
+        case Int(eventHotKeyInvalidErr): return "eventHotKeyInvalidErr"
+        case Int(eventNotHandledErr): return "eventNotHandledErr"
+        case Int(eventInternalErr): return "eventInternalErr"
+        case Int(paramErr): return "paramErr"
+        default: return "osstatus(\(status))"
+        }
+    }
+
     @Published private(set) var lastErrorMessage: String?
     @Published private(set) var shortcut: Shortcut?
     @Published private(set) var isRecording = false
@@ -110,9 +128,11 @@ final class HotkeyManager: ObservableObject {
     private var hotKeyRef: EventHotKeyRef?
     private var eventHandler: EventHandlerRef?
     private var recordingMonitor: Any?
+    private var suspendedForRecording = false
     private var nextHotKeyID: UInt32 = 1
     private var retryTask: Task<Void, Never>?
     private var settleTasks: [Task<Void, Never>] = []
+    private var wakeReassertTask: Task<Void, Never>?
     private var hotKeyObservers: [(center: NotificationCenter, token: NSObjectProtocol)] = []
     var onHotKey: (@MainActor () -> Void)?
 
@@ -136,7 +156,7 @@ final class HotkeyManager: ObservableObject {
             return
         }
         TextSnapLog.hotkey.notice(
-            "launch registration begin keyCode=\(shortcut.keyCode, privacy: .public) modifiers=\(shortcut.modifiers, privacy: .public)"
+            "launch registration begin keyCode=\(shortcut.keyCode) modifiers=\(shortcut.modifiers) secureInput=\(Self.isSecureEventInputActive)"
         )
         register(shortcut, persist: false)
         scheduleSettleReasserts()
@@ -152,12 +172,12 @@ final class HotkeyManager: ObservableObject {
     /// after wake/unlock and during the first minutes of a login session, when
     /// the WindowServer may still be settling.
     func reassertRegistration(reason: String) {
-        guard let shortcut else { return }
+        guard !isRecording, let shortcut else { return }
         if let ref = hotKeyRef {
             UnregisterEventHotKey(ref)
             hotKeyRef = nil
         }
-        TextSnapLog.hotkey.notice("reassert reason=\(reason, privacy: .public)")
+        TextSnapLog.hotkey.notice("reassert reason=\(reason) secureInput=\(Self.isSecureEventInputActive)")
         register(shortcut, persist: false)
         if hotKeyRef == nil { scheduleRetry(reason: reason) }
     }
@@ -165,6 +185,8 @@ final class HotkeyManager: ObservableObject {
     func unregister() {
         retryTask?.cancel()
         retryTask = nil
+        wakeReassertTask?.cancel()
+        wakeReassertTask = nil
         settleTasks.forEach { $0.cancel() }
         settleTasks = []
         for observer in hotKeyObservers {
@@ -190,13 +212,13 @@ final class HotkeyManager: ObservableObject {
                 if Task.isCancelled { return }
                 try? await Task.sleep(for: delay)
                 guard !Task.isCancelled, let self, let shortcut = self.shortcut else { return }
-                if self.hotKeyRef != nil { return }
+                if self.hotKeyRef != nil || self.isRecording { return }
                 TextSnapLog.hotkey.notice(
-                    "retry attempt \(index + 1, privacy: .public) reason=\(reason, privacy: .public)"
+                    "retry attempt \(index + 1) reason=\(reason) secureInput=\(Self.isSecureEventInputActive)"
                 )
                 self.register(shortcut, persist: false)
                 if self.hotKeyRef != nil {
-                    TextSnapLog.hotkey.notice("retry succeeded")
+                    TextSnapLog.hotkey.notice("retry succeeded attempt=\(index + 1)")
                     return
                 }
             }
@@ -217,6 +239,20 @@ final class HotkeyManager: ObservableObject {
         }
     }
 
+    /// Coalesced wake/unlock re-assertion: ensures WindowServer has settled 600ms after
+    /// power or session transition without spamming registrations.
+    private func schedulePostLifecycleReassert(reason: String) {
+        if hotKeyRef == nil {
+            reassertRegistration(reason: reason)
+        }
+        wakeReassertTask?.cancel()
+        wakeReassertTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .milliseconds(600))
+            guard !Task.isCancelled else { return }
+            self?.reassertRegistration(reason: "\(reason)+settle")
+        }
+    }
+
     private func observeLifecycle() {
         guard hotKeyObservers.isEmpty else { return }
         let workspaceCenter = NSWorkspace.shared.notificationCenter
@@ -230,7 +266,7 @@ final class HotkeyManager: ObservableObject {
                 forName: name, object: nil, queue: .main
             ) { [weak self] _ in
                 MainActor.assumeIsolated {
-                    self?.reassertRegistration(reason: name.rawValue)
+                    self?.schedulePostLifecycleReassert(reason: name.rawValue)
                 }
             }
             hotKeyObservers.append((workspaceCenter, token))
@@ -240,7 +276,7 @@ final class HotkeyManager: ObservableObject {
             forName: unlockName, object: nil, queue: .main
         ) { [weak self] _ in
             MainActor.assumeIsolated {
-                self?.reassertRegistration(reason: "unlock")
+                self?.schedulePostLifecycleReassert(reason: "unlock")
             }
         }
         hotKeyObservers.append((DistributedNotificationCenter.default(), unlockToken))
@@ -249,7 +285,13 @@ final class HotkeyManager: ObservableObject {
     func beginRecording() {
         stopRecording()
         lastErrorMessage = nil
+        if let ref = hotKeyRef, !E2ERuntime.isEnabled {
+            UnregisterEventHotKey(ref)
+            hotKeyRef = nil
+            suspendedForRecording = true
+        }
         isRecording = true
+        TextSnapLog.hotkey.notice("recording started suspendedActive=\(suspendedForRecording)")
         recordingMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             guard let self else { return event }
             MainActor.assumeIsolated {
@@ -265,9 +307,11 @@ final class HotkeyManager: ObservableObject {
             self.recordingMonitor = nil
         }
         isRecording = false
+        restoreSuspendedShortcutIfNeeded(clearError: false)
     }
 
     func clearShortcut() {
+        suspendedForRecording = false
         stopRecording()
         retryTask?.cancel()
         retryTask = nil
@@ -284,6 +328,7 @@ final class HotkeyManager: ObservableObject {
     }
 
     func restoreFactoryDefault() {
+        suspendedForRecording = false
         stopRecording()
         register(.factoryDefault, persist: true)
     }
@@ -291,34 +336,85 @@ final class HotkeyManager: ObservableObject {
     private func finishRecording(_ event: NSEvent) {
         if event.keyCode == UInt16(kVK_Escape) {
             stopRecording()
+            TextSnapLog.hotkey.notice("recording cancelled via Escape")
             return
         }
         let candidate = Shortcut(keyCode: UInt32(event.keyCode), modifiers: carbonModifiers(from: event.modifierFlags))
-        stopRecording()
+        if let recordingMonitor {
+            NSEvent.removeMonitor(recordingMonitor)
+            self.recordingMonitor = nil
+        }
+        isRecording = false
+
         guard candidate.modifiers != 0 else {
             lastErrorMessage = String(localized: "settings.hotkey.needModifier")
+            TextSnapLog.hotkey.notice("recording rejected: missing modifier keyCode=\(candidate.keyCode)")
+            restoreSuspendedShortcutIfNeeded(clearError: false)
             return
         }
         guard !isReservedBySystem(candidate) else {
             lastErrorMessage = String(localized: "settings.hotkey.reserved")
+            TextSnapLog.hotkey.notice(
+                "recording rejected: system reserved keyCode=\(candidate.keyCode) modifiers=\(candidate.modifiers)"
+            )
+            restoreSuspendedShortcutIfNeeded(clearError: false)
             return
         }
-        register(candidate, persist: true)
+
+        let registered = register(candidate, persist: true)
+        if !registered {
+            restoreSuspendedShortcutIfNeeded(clearError: false)
+        } else {
+            suspendedForRecording = false
+        }
     }
 
-    private func register(_ candidate: Shortcut, persist: Bool) {
-        guard installEventHandler() else { return }
-        if candidate == shortcut, hotKeyRef != nil { return }
+    private func restoreSuspendedShortcutIfNeeded(clearError: Bool) {
+        guard suspendedForRecording else { return }
+        suspendedForRecording = false
+        guard let existing = shortcut, hotKeyRef == nil else { return }
+        let savedError = lastErrorMessage
+        _ = register(existing, persist: false)
+        if !clearError, let savedError {
+            lastErrorMessage = savedError
+        }
+    }
+
+    @discardableResult
+    private func register(_ candidate: Shortcut, persist: Bool) -> Bool {
+        if E2ERuntime.isEnabled {
+            shortcut = candidate
+            lastErrorMessage = nil
+            if persist {
+                TextSnapSettings.shared.saveHotkey(keyCode: candidate.keyCode, modifiers: candidate.modifiers)
+            }
+            TextSnapLog.hotkey.notice(
+                "e2e shortcut updated keyCode=\(candidate.keyCode) modifiers=\(candidate.modifiers) persisted=\(persist)"
+            )
+            return true
+        }
+
+        guard installEventHandler() else { return false }
+        if candidate == shortcut, hotKeyRef != nil { return true }
         var newRef: EventHotKeyRef?
-        let hotKeyID = EventHotKeyID(signature: OSType(0x5453_4E50), id: nextHotKeyID) // 'TSNP'
+        let assignedID = nextHotKeyID
+        let hotKeyID = EventHotKeyID(signature: Self.hotKeySignature, id: assignedID)
         nextHotKeyID &+= 1
-        let status = RegisterEventHotKey(candidate.keyCode, candidate.modifiers, hotKeyID, GetApplicationEventTarget(), 0, &newRef)
+        let status = RegisterEventHotKey(
+            candidate.keyCode,
+            candidate.modifiers,
+            hotKeyID,
+            GetApplicationEventTarget(),
+            0,
+            &newRef
+        )
         guard status == noErr, let newRef else {
+            let errName = Self.carbonErrorName(for: status)
             TextSnapLog.hotkey.error(
-                "RegisterEventHotKey failed status=\(status, privacy: .public) keyCode=\(candidate.keyCode, privacy: .public) modifiers=\(candidate.modifiers, privacy: .public)"
+                "RegisterEventHotKey failed status=\(status) (\(errName)) keyCode=\(candidate.keyCode) modifiers=\(candidate.modifiers) secureInput=\(Self.isSecureEventInputActive)"
             )
             lastErrorMessage = String(localized: "settings.hotkey.taken")
-            return
+            return false
         }
         if let oldRef = hotKeyRef { UnregisterEventHotKey(oldRef) }
         hotKeyRef = newRef
@@ -327,33 +423,48 @@ final class HotkeyManager: ObservableObject {
         retryTask?.cancel()
         retryTask = nil
         TextSnapLog.hotkey.notice(
-            "registered keyCode=\(candidate.keyCode, privacy: .public) modifiers=\(candidate.modifiers, privacy: .public) persisted=\(persist, privacy: .public)"
+            "registered id=\(assignedID) keyCode=\(candidate.keyCode) modifiers=\(candidate.modifiers) persisted=\(persist)"
         )
         if persist {
             TextSnapSettings.shared.saveHotkey(keyCode: candidate.keyCode, modifiers: candidate.modifiers)
         }
+        return true
     }
 
     private func installEventHandler() -> Bool {
         guard eventHandler == nil else { return true }
         var eventType = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
         let selfPtr = Unmanaged.passUnretained(self).toOpaque()
-        let status = InstallEventHandler(GetApplicationEventTarget(), { _, _, userData in
-            guard let userData else { return OSStatus(eventNotHandledErr) }
+        let status = InstallEventHandler(GetApplicationEventTarget(), { _, event, userData in
+            guard let userData, let event else { return OSStatus(eventNotHandledErr) }
+            var hotKeyID = EventHotKeyID()
+            let paramStatus = GetEventParameter(
+                event,
+                EventParamName(kEventParamDirectObject),
+                EventParamType(typeEventHotKeyID),
+                nil,
+                MemoryLayout<EventHotKeyID>.size,
+                nil,
+                &hotKeyID
+            )
+            guard paramStatus == noErr, hotKeyID.signature == HotkeyManager.hotKeySignature else {
+                return OSStatus(eventNotHandledErr)
+            }
             let manager = Unmanaged<HotkeyManager>.fromOpaque(userData).takeUnretainedValue()
-            manager.dispatchHotKey()
+            manager.dispatchHotKey(id: hotKeyID.id)
             return noErr
         }, 1, &eventType, selfPtr, &eventHandler)
         guard status == noErr else {
-            TextSnapLog.hotkey.error("InstallEventHandler failed status=\(status, privacy: .public)")
+            let errName = Self.carbonErrorName(for: status)
+            TextSnapLog.hotkey.error("InstallEventHandler failed status=\(status) (\(errName))")
             lastErrorMessage = String(localized: "settings.hotkey.initFailed")
             return false
         }
         return true
     }
 
-    nonisolated private func dispatchHotKey() {
-        TextSnapLog.hotkey.notice("pressed")
+    nonisolated private func dispatchHotKey(id: UInt32) {
+        TextSnapLog.hotkey.notice("pressed id=\(id) secureInput=\(Self.isSecureEventInputActive)")
         Task { @MainActor in self.onHotKey?() }
     }
 

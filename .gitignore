@@ -12,3 +12,4 @@ SourcePackages/
 logs/
 __pycache__/
 *.pyc
+Tests/E2E/artifacts/

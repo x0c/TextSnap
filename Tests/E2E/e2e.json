@@ -1,0 +1,12 @@
+{
+  "app_path": "/Applications/TextSnap.app",
+  "bundle_id": "top.caozc.TextSnap",
+  "window_size": [480, 500],
+  "launch_args": [],
+  "build": false,
+  "configuration": "Release",
+  "settle": 1.5,
+  "artifacts": "Tests/E2E/artifacts",
+  "baselines": "Tests/E2E/baselines",
+  "templates": "Tests/E2E/templates"
+}

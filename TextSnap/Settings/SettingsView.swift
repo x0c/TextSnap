@@ -7,7 +7,8 @@ struct SettingsView: View {
     @Bindable private var launchAtLogin = LaunchAtLoginManager.shared
     @Bindable private var engine = CaptureEngine.shared
     @Bindable private var settings = TextSnapSettings.shared
-    @State private var permissionGranted = ScreenCapturePermission.isGranted
+    @State private var permissionGranted = true
+    @State private var permissionTask: Task<Void, Never>?
     @State private var contentHeight: CGFloat = 400
 
     var body: some View {
@@ -17,25 +18,29 @@ struct SettingsView: View {
                 permissionRow
                 LabeledContent(String(localized: "settings.capture.row")) {
                     Button(String(localized: "menu.captureNow")) {
-                        AppDelegate.shared?.captureNow()
+                        AppDelegate.shared?.captureNow(source: .settingsButton)
                     }
                     .disabled(engine.isCapturing)
+                    .accessibilityIdentifier("settings.capture.now")
                 }
             }
             Section(String(localized: "settings.lastResult.section")) {
                 if engine.lastText.isEmpty {
                     Text(String(localized: "settings.lastResult.empty"))
                         .foregroundStyle(.secondary)
+                        .accessibilityIdentifier("settings.lastResult.empty")
                 } else {
                     LabeledContent(String(localized: "settings.lastResult.text")) {
                         Button(String(localized: "settings.lastResult.copyAgain")) {
                             engine.copyLastAgain()
                         }
+                        .accessibilityIdentifier("settings.lastResult.copyAgain")
                     }
                     Text(engine.lastText)
                         .lineLimit(4)
                         .textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        .accessibilityIdentifier("settings.lastResult.text")
                 }
             }
             Section(String(localized: "settings.general.section")) {
@@ -43,6 +48,7 @@ struct SettingsView: View {
                     get: { launchAtLogin.isEnabled },
                     set: { launchAtLogin.setEnabled($0) }
                 ))
+                .accessibilityIdentifier("settings.launchAtLogin.toggle")
                 if launchAtLogin.requiresApproval {
                     LabeledContent {
                         Button(String(localized: "settings.launchAtLogin.openSettings")) {
@@ -63,6 +69,7 @@ struct SettingsView: View {
                     set: { AppDelegate.shared?.setMenuBarIconVisible($0) }
                 ))
                 .help(String(localized: "settings.menuBar.recoveryHint"))
+                .accessibilityIdentifier("settings.menuBar.showIcon")
             }
             Section { aboutRow }
         }
@@ -75,12 +82,35 @@ struct SettingsView: View {
         .frame(width: 480, height: contentHeight)
         .fixedSize()
         .focusEffectDisabled()
+        .transaction { transaction in
+            if E2ERuntime.isEnabled {
+                transaction.animation = nil
+            }
+        }
         .background(SettingsWindowObserver())
         .onAppear(perform: refreshStatus)
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             refreshStatus()
         }
-        .onDisappear { hotkeyManager.stopRecording() }
+        .onChange(of: engine.lastText) { _, _ in
+            DispatchQueue.main.async {
+                SettingsWindowController.shared.flushRedrawIfNeeded()
+            }
+        }
+        .onChange(of: settings.isMenuBarIconVisible) { _, _ in
+            DispatchQueue.main.async {
+                SettingsWindowController.shared.flushRedrawIfNeeded()
+            }
+        }
+        .onChange(of: hotkeyManager.shortcut) { _, _ in
+            DispatchQueue.main.async {
+                SettingsWindowController.shared.flushRedrawIfNeeded()
+            }
+        }
+        .onDisappear {
+            permissionTask?.cancel()
+            hotkeyManager.stopRecording()
+        }
         .onExitCommand {
             if hotkeyManager.isRecording {
                 hotkeyManager.stopRecording()
@@ -102,6 +132,7 @@ struct SettingsView: View {
                 .disabled(hotkeyManager.isRecording)
                 .accessibilityLabel(String(localized: "settings.hotkey.current"))
                 .accessibilityValue(hotkeyManager.shortcut?.displayName ?? String(localized: "settings.hotkey.cleared"))
+                .accessibilityIdentifier("settings.hotkey.button")
                 .help(String(localized: "settings.hotkey.recordingHint"))
                 Menu {
                     Button(String(localized: "settings.hotkey.clear")) { hotkeyManager.clearShortcut() }
@@ -112,12 +143,14 @@ struct SettingsView: View {
                 }
                 .menuStyle(.borderlessButton)
                 .fixedSize()
+                .accessibilityIdentifier("settings.hotkey.actions")
             }
         }
         if let message = hotkeyManager.lastErrorMessage {
             Text(message)
                 .font(.caption)
                 .foregroundStyle(.red)
+                .accessibilityIdentifier("settings.hotkey.error")
         }
     }
 
@@ -127,10 +160,12 @@ struct SettingsView: View {
             if permissionGranted {
                 Text(String(localized: "settings.permission.granted"))
                     .foregroundStyle(.secondary)
+                    .accessibilityIdentifier("settings.permission.status")
             } else {
                 Button(String(localized: "settings.permission.openSettings")) {
                     ScreenCapturePermission.openSystemSettings()
                 }
+                .accessibilityIdentifier("settings.permission.openSettings")
             }
         }
         if !permissionGranted {
@@ -161,15 +196,28 @@ struct SettingsView: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel(String(localized: "menu.about"))
+            .accessibilityIdentifier("settings.about.button")
             .help(String(localized: "menu.about"))
             Spacer(minLength: 8)
             UpdateCheckButton(availability: AppDelegate.shared?.updateAvailability)
             Button(String(localized: "settings.quit")) { AppDelegate.shared?.requestTermination() }
+                .accessibilityIdentifier("settings.quit.button")
         }
     }
 
     private func refreshStatus() {
-        permissionGranted = ScreenCapturePermission.isGranted
+        if E2ERuntime.isEnabled {
+            permissionGranted = true
+            return
+        }
+        permissionTask?.cancel()
+        permissionTask = Task {
+            let granted = await Task.detached(priority: .userInitiated) {
+                ScreenCapturePermission.isGranted
+            }.value
+            guard !Task.isCancelled else { return }
+            permissionGranted = granted
+        }
         launchAtLogin.refreshInBackground()
     }
 }
@@ -181,6 +229,7 @@ private struct UpdateCheckButton: View {
         Button(title) {
             AppDelegate.shared?.checkForUpdates()
         }
+        .accessibilityIdentifier("settings.updates.button")
     }
 
     private var title: String {

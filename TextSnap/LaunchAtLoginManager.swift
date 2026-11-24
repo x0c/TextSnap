@@ -47,11 +47,11 @@ final class LaunchAtLoginManager {
             status = newStatus
             lastErrorMessage = nil
             TextSnapLog.lifecycle.notice(
-                "launch at login set enabled=\(enabled, privacy: .public) status=\(Self.diagnosticName(newStatus), privacy: .public)"
+                "launch at login set enabled=\(enabled) status=\(Self.diagnosticName(newStatus))"
             )
         case .failure(let error):
             TextSnapLog.lifecycle.error(
-                "launch at login toggle failed enabled=\(enabled, privacy: .public) error=\(String(describing: error), privacy: .public)"
+                "launch at login toggle failed enabled=\(enabled) error=\(String(describing: error))"
             )
             refreshInBackground()
             lastErrorMessage = String(localized: "settings.launchAtLogin.failed")
@@ -67,7 +67,7 @@ final class LaunchAtLoginManager {
             guard !Task.isCancelled else { return }
             self?.status = newStatus
             TextSnapLog.lifecycle.notice(
-                "launch at login status=\(Self.diagnosticName(newStatus), privacy: .public)"
+                "launch at login status=\(Self.diagnosticName(newStatus))"
             )
         }
     }

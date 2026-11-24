@@ -26,6 +26,9 @@ final class TextSnapSettings {
     }
 
     nonisolated static func directoryURL() -> URL {
+        if let e2eRoot = E2ERuntime.rootURL {
+            return e2eRoot
+        }
         let fm = FileManager.default
         if let xdg = ProcessInfo.processInfo.environment["XDG_CONFIG_HOME"], !xdg.isEmpty {
             return URL(fileURLWithPath: xdg, isDirectory: true).appendingPathComponent("textsnap", isDirectory: true)
@@ -85,17 +88,30 @@ final class TextSnapSettings {
     }
 
     private static func load(from url: URL) -> Loaded {
-        guard let data = try? Data(contentsOf: url),
-              let decoded = try? JSONDecoder().decode(File.self, from: data)
-        else {
-            return Loaded(keyCode: nil, modifiers: nil, enabled: true, iconVisible: defaultMenuBarIconVisible)
-        }
-        let code = decoded.hotkeyKeyCode.map { UInt32($0) }
-        let mods = decoded.hotkeyModifiers.map { UInt32($0) }
-        return Loaded(
-            keyCode: code, modifiers: mods, enabled: decoded.hotkeyEnabled ?? true,
-            iconVisible: decoded.isMenuBarIconVisible ?? defaultMenuBarIconVisible
+        let fallback = Loaded(
+            keyCode: nil,
+            modifiers: nil,
+            enabled: true,
+            iconVisible: defaultMenuBarIconVisible
         )
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            return fallback
+        }
+        do {
+            let data = try Data(contentsOf: url)
+            let decoded = try JSONDecoder().decode(File.self, from: data)
+            let code = decoded.hotkeyKeyCode.flatMap { UInt32(exactly: $0) }
+            let mods = decoded.hotkeyModifiers.flatMap { UInt32(exactly: $0) }
+            return Loaded(
+                keyCode: code,
+                modifiers: mods,
+                enabled: decoded.hotkeyEnabled ?? true,
+                iconVisible: decoded.isMenuBarIconVisible ?? defaultMenuBarIconVisible
+            )
+        } catch {
+            TextSnapLog.settings.error("settings load failed path=\(url.lastPathComponent) error=\(error.localizedDescription)")
+            return fallback
+        }
     }
 
     @discardableResult
@@ -115,9 +131,7 @@ final class TextSnapSettings {
             try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: fileURL.path)
             return true
         } catch {
-            #if DEBUG
-            NSLog("[TextSnap] settings persist failed: %@", error.localizedDescription)
-            #endif
+            TextSnapLog.settings.error("settings persist failed: \(error.localizedDescription)")
             return false
         }
     }
