@@ -85,19 +85,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Cached tri-state first; the real read happens off-main.
         LaunchAtLoginManager.shared.refreshInBackground()
 
-        // Sparkle startup, Vision warm-up and TCC preflight are useful but must
-        // never sit between the user and the hotkey.
+        // Sparkle startup and TCC preflight stay off the launch critical path.
+        // We intentionally do NOT pre-warm Vision at launch: ANECompilerService
+        // compilation on launch competes with the user's first capture and
+        // caused 60s+ lockouts when paired with capture serialization.
         deferredStartupTasks.append(Task { @MainActor [weak self] in
             try? await Task.sleep(for: .seconds(2))
             guard !Task.isCancelled else { return }
             self?.startUpdaterIfNeeded()
-        })
-        deferredStartupTasks.append(Task {
-            try? await Task.sleep(for: .milliseconds(1500))
-            guard !Task.isCancelled else { return }
-            await Task.detached(priority: .userInitiated) {
-                TextRecognizer.warmUp()
-            }.value
         })
         deferredStartupTasks.append(Task.detached(priority: .utility) {
             _ = ScreenCapturePermission.isGranted

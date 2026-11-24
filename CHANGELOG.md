@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.10
+
+- Remove the launch-time Vision warm-up job so starting TextSnap no longer triggers a 60-second `ANECompilerService` compilation spike that competed with real captures.
+- Allow global shortcut triggers at all times except while the screen-selection crosshair is open: background OCR now runs non-blockingly with generation superseding so an older recognition never blocks a new shortcut press, overwrite-copies over a newer capture, or blocks the clipboard with synchronous sound loading.
+
+### 简体中文
+
+- 移除启动后的自动 Vision 预热任务，避免每次启动立即触发约 60 秒的 `ANECompilerService` 编译高峰并阻塞首次真实框选识别。
+- 取消后台识图阶段对全局快捷键的拦截：仅在屏幕权限检查或十字框选进行中丢弃重入触发，识图在后台并发执行并按代次作废旧结果，不再出现按下快捷键毫无反应或旧识别结果覆写新剪贴板/延迟播放提示音的问题。
+
 ## 0.2.9
 
 - Fix the macOS 27 Vision E5RT recognition failure (`CRImageReaderError.e5rtError(..., 13)`) and startup freeze by switching to a `512×256` bilingual warm-up image, padding small crops (`< 256×160`), selecting explicit `.gpu` → `.cpu` compute devices with sRGB fallback, and automatically recovering via a headless `--ocr-once` worker process if E5RT is ever poisoned.

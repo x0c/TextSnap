@@ -66,8 +66,7 @@ nonisolated enum TextRecognizer {
         return candidates
     }()
 
-    /// Serializes warm-up and user recognition so they never contend inside Vision.
-    private static let recognitionQueue = DispatchQueue(label: "top.caozc.TextSnap.ocr", qos: .userInitiated)
+    /// Tracks warm-up / device fallback / poisoning state safely across concurrent OCR tasks.
     private static let hasCompletedRecognition = OSAllocatedUnfairLock(initialState: false)
     private static let gpuDemoted = OSAllocatedUnfairLock(initialState: false)
     private static let inProcessPoisoned = OSAllocatedUnfairLock(initialState: false)
@@ -104,11 +103,9 @@ nonisolated enum TextRecognizer {
             return try runIsolatedWorker(imageURL: imageURL)
         }
         do {
-            return try recognitionQueue.sync {
-                let result = try performInProcessRecognition(imageURL: imageURL)
-                hasCompletedRecognition.withLock { $0 = true }
-                return result
-            }
+            let result = try performInProcessRecognition(imageURL: imageURL)
+            hasCompletedRecognition.withLock { $0 = true }
+            return result
         } catch {
             if canSpawnCLIWorker && isE5RTError(error) {
                 inProcessPoisoned.withLock { $0 = true }
@@ -120,11 +117,9 @@ nonisolated enum TextRecognizer {
     }
 
     static func recognizeWithDiagnostics(in image: CGImage) throws -> RecognizeResult {
-        try recognitionQueue.sync {
-            let result = try performInProcessRecognition(cgImage: image)
-            hasCompletedRecognition.withLock { $0 = true }
-            return result
-        }
+        let result = try performInProcessRecognition(cgImage: image)
+        hasCompletedRecognition.withLock { $0 = true }
+        return result
     }
 
     /// Headless worker entry invoked via `TextSnap --ocr-once <imagePath>`.

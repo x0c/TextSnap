@@ -40,19 +40,21 @@ import Testing
         (320, 64, "TextSnap Warmup 67890", "TextSnap"),
         (856, 60, "再次识别 中文 English 999", "English"),
     ]
-    var warmedDevices: Set<String> = []
+    var warmedBuckets: Set<String> = []
     for (index, item) in cases.enumerated() {
         let (width, height, inputText, token) = item
         let image = try makeSyntheticDisplayP3Image(width: width, height: height, text: inputText)
+        let prepared = TextRecognizer.padForVisionIfNeeded(image)
         let result = try TextRecognizer.recognizeWithDiagnostics(in: image)
         #expect(result.deviceName == "gpu" || result.deviceName == "cpu" || result.deviceName.hasPrefix("cpu+"))
         #expect(!result.text.isEmpty)
         #expect(result.text.contains(token) || result.text.contains("中文") || result.text.contains("TextSnap"))
-        // Once a compute device has warmed up its model in-process, subsequent recognitions must stay fast.
-        if warmedDevices.contains(result.deviceName) {
+        // Once a shape bucket and compute device are warmed in-process, repeat calls stay fast.
+        let bucket = "\(prepared.width)x\(prepared.height)-\(result.deviceName)"
+        if warmedBuckets.contains(bucket) {
             #expect(result.durationMs < 5_000)
         }
-        warmedDevices.insert(result.deviceName)
+        warmedBuckets.insert(bucket)
         if index == cases.count - 1 {
             #expect(result.durationMs < 5_000)
         }
@@ -132,6 +134,11 @@ import Testing
     #expect(HotkeyManager.carbonErrorName(for: -9878) == "eventHotKeyExistsErr")
     #expect(HotkeyManager.carbonErrorName(for: -9874) == "eventNotHandledErr")
     #expect(HotkeyManager.carbonErrorName(for: 0) == "noErr")
+}
+
+@Test func captureGenerationSupersedesStaleOCR() {
+    #expect(CaptureEngine.isCurrentGeneration(3, active: 3))
+    #expect(!CaptureEngine.isCurrentGeneration(2, active: 3))
 }
 
 private func makeSyntheticDisplayP3Image(width: Int, height: Int, text: String) throws -> CGImage {
