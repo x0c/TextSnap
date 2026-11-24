@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.11
+
+- Fix severe main-thread freezes when triggering shortcuts or copying recognition results: replace AppKit `NSSound` (which synchronously initialized CoreAudio HAL, AudioQueue, and virtual/Bluetooth audio routing on the main thread for up to ~15 seconds on macOS 27.3) with off-main `AudioToolbox` system sound playback (`systemsoundserverd`).
+- Move `/usr/sbin/screencapture` process launch off the main actor, cache confirmed Screen Recording permission (refreshed off-main on launch and activation, invalidated on capture error), eliminate duplicate hotkey main-actor hops, close child pipe descriptors deterministically, and add `dispatchMs` trigger latency telemetry.
+
+### 简体中文
+
+- 修复触发快捷键与完成复制时主线程长时间卡死的问题：移除在主线程同步初始化 CoreAudio HAL / AudioQueue 与虚拟声卡、蓝牙音频路由的 AppKit `NSSound`（在 macOS 27.3 实机上曾造成长达约 15 秒卡顿），改为后台串行队列调用 `AudioToolbox` 系统提示音（`systemsoundserverd`）。
+- 将 `/usr/sbin/screencapture` 进程启动移出主线程，缓存已确认授权的屏幕录制权限（启动与激活时后台刷新、采集失败自动失效重试），去掉全局快捷键的重复主线程调度跳转，规范关闭子进程管道句柄，并在日志中补充 `dispatchMs` 触发延迟耗时。
+
 ## 0.2.10
 
 - Remove the launch-time Vision warm-up job so starting TextSnap no longer triggers a 60-second `ANECompilerService` compilation spike that competed with real captures.

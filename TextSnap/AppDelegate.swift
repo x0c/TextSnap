@@ -31,8 +31,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         AppDelegate.shared = self
         guard !E2ERuntime.isEnabled else { return }
 
-        HotkeyManager.shared.onHotKey = { [weak self] in
-            Task { @MainActor in await self?.captureEngine.captureNow(source: .hotkey) }
+        HotkeyManager.shared.onHotKey = { [weak self] pressedAt in
+            Task { @MainActor in
+                await self?.captureEngine.captureNow(source: .hotkey, triggeredAt: pressedAt)
+            }
         }
         HotkeyManager.shared.startFromLaunch()
     }
@@ -79,6 +81,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             MainActor.assumeIsolated {
                 self?.refreshCommands()
                 LaunchAtLoginManager.shared.refreshInBackground()
+                self?.captureEngine.refreshPermissionCacheInBackground()
             }
         }
 
@@ -94,8 +97,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             guard !Task.isCancelled else { return }
             self?.startUpdaterIfNeeded()
         })
+        deferredStartupTasks.append(Task { @MainActor [weak self] in
+            self?.captureEngine.refreshPermissionCacheInBackground()
+        })
         deferredStartupTasks.append(Task.detached(priority: .utility) {
-            _ = ScreenCapturePermission.isGranted
             ScreenCapture.cleanupOrphanedTempFiles()
         })
 

@@ -124,10 +124,12 @@ nonisolated enum ScreenCapture {
                 }
                 do {
                     try process.run()
+                    try? stderrPipe.fileHandleForWriting.close()
                     if state.isCancelled {
                         terminatedIfNeeded(process)
                     }
                 } catch {
+                    try? stderrPipe.fileHandleForWriting.close()
                     state.failLaunch(error, fileURL: file)
                 }
             }

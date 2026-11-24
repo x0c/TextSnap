@@ -80,6 +80,39 @@ def test_capture_now_runs_vision_ocr_and_populates_last_result(
     assert copy_located.token
 
 
+def test_rapid_consecutive_captures_keep_ui_responsive(
+    app, driver, e2e_root: pathlib.Path, e2e_expected_tokens: list[str]
+):
+    driver.press(identifier="settings.capture.now")
+    t0 = time.monotonic()
+    driver.locate(identifier="settings.menuBar.showIcon")
+    ax_ms_1 = time.monotonic() - t0
+    assert ax_ms_1 < 1.0, f"Main thread blocked during first capture: AX locate took {ax_ms_1:.3f}s"
+
+    _wait_for_non_empty_result(driver, e2e_expected_tokens, timeout=90.0)
+
+    # Trigger a second capture immediately without restarting and verify the UI stays responsive.
+    driver.press(identifier="settings.capture.now")
+    t1 = time.monotonic()
+    driver.locate(identifier="settings.menuBar.showIcon")
+    ax_ms_2 = time.monotonic() - t1
+    assert ax_ms_2 < 1.0, f"Main thread blocked after sound/clipboard: AX locate took {ax_ms_2:.3f}s"
+
+    log_file = e2e_root / "logs" / "textsnap.log"
+    deadline = time.monotonic() + 15.0
+    content = ""
+    while time.monotonic() < deadline:
+        if log_file.exists():
+            content = log_file.read_text(encoding="utf-8")
+            if "capture requested id=#2" in content and "ocr ok id=#2" in content:
+                break
+        time.sleep(0.1)
+
+    assert "capture requested id=#2" in content, content
+    assert "dispatchMs=" in content, content
+    assert "ocr ok id=#2" in content, content
+
+
 def test_observability_log_is_secured_and_privacy_safe(
     e2e_root: pathlib.Path, e2e_expected_tokens: list[str]
 ):
@@ -101,7 +134,7 @@ def test_observability_log_is_secured_and_privacy_safe(
     assert log_file.is_file()
     assert stat.S_IMODE(log_file.stat().st_mode) == 0o600
 
-    for marker in ("app_start", "capture requested", "ocr ok", "device=", "chars=", "copied last result again"):
+    for marker in ("app_start", "capture requested", "dispatchMs=", "ocr ok", "device=", "chars=", "copied last result again"):
         assert marker in content, f"Missing log marker {marker!r} in {log_file}"
 
     # Privacy invariant: recognized text must never appear in diagnostic logs.

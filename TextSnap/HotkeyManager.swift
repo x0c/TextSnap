@@ -134,7 +134,7 @@ final class HotkeyManager: ObservableObject {
     private var settleTasks: [Task<Void, Never>] = []
     private var wakeReassertTask: Task<Void, Never>?
     private var hotKeyObservers: [(center: NotificationCenter, token: NSObjectProtocol)] = []
-    var onHotKey: (@MainActor () -> Void)?
+    var onHotKey: (@MainActor (DispatchTime) -> Void)?
 
     private init() {
         if let stored = TextSnapSettings.shared.storedHotkey() {
@@ -464,8 +464,15 @@ final class HotkeyManager: ObservableObject {
     }
 
     nonisolated private func dispatchHotKey(id: UInt32) {
+        let pressedAt = DispatchTime.now()
         TextSnapLog.hotkey.notice("pressed id=\(id) secureInput=\(Self.isSecureEventInputActive)")
-        Task { @MainActor in self.onHotKey?() }
+        if Thread.isMainThread {
+            MainActor.assumeIsolated {
+                self.onHotKey?(pressedAt)
+            }
+        } else {
+            Task { @MainActor in self.onHotKey?(pressedAt) }
+        }
     }
 
     private func carbonModifiers(from modifiers: NSEvent.ModifierFlags) -> UInt32 {

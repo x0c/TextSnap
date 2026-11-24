@@ -332,9 +332,27 @@ nonisolated enum TextRecognizer {
         process.standardOutput = stdoutPipe
         process.standardError = stderrPipe
 
-        try process.run()
+        do {
+            try process.run()
+        } catch {
+            try? stdoutPipe.fileHandleForWriting.close()
+            try? stderrPipe.fileHandleForWriting.close()
+            throw error
+        }
+        try? stdoutPipe.fileHandleForWriting.close()
+        try? stderrPipe.fileHandleForWriting.close()
+
+        let stderrLock = OSAllocatedUnfairLock(initialState: Data())
+        let stderrGroup = DispatchGroup()
+        stderrGroup.enter()
+        DispatchQueue.global(qos: .userInitiated).async {
+            let data = stderrPipe.fileHandleForReading.readDataToEndOfFile()
+            stderrLock.withLock { $0 = data }
+            stderrGroup.leave()
+        }
         let stdoutData = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
-        let stderrData = stderrPipe.fileHandleForReading.readDataToEndOfFile()
+        stderrGroup.wait()
+        let stderrData = stderrLock.withLock { $0 }
         process.waitUntilExit()
 
         let elapsedMs = TextSnapLog.milliseconds(since: started)

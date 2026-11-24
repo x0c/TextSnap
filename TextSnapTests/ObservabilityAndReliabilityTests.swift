@@ -1,6 +1,8 @@
+import AudioToolbox
 import CoreGraphics
 import CoreText
 import Foundation
+import os
 @testable import TextSnap
 import Testing
 
@@ -139,6 +141,51 @@ import Testing
 @Test func captureGenerationSupersedesStaleOCR() {
     #expect(CaptureEngine.isCurrentGeneration(3, active: 3))
     #expect(!CaptureEngine.isCurrentGeneration(2, active: 3))
+}
+
+@Test @MainActor func confirmSoundPlayerNeverBlocksMainThread() async throws {
+    let state = OSAllocatedUnfairLock(initialState: (executed: false, wasMainThread: true))
+    await withCheckedContinuation { continuation in
+        let player = ConfirmSoundPlayer {
+            let onMain = Thread.isMainThread
+            Thread.sleep(forTimeInterval: 0.25)
+            state.withLock {
+                $0.executed = true
+                $0.wasMainThread = onMain
+            }
+            continuation.resume()
+        }
+
+        let start = DispatchTime.now()
+        player.play()
+        let callElapsedMs = TextSnapLog.milliseconds(since: start)
+        #expect(callElapsedMs < 50)
+    }
+
+    let snapshot = state.withLock { $0 }
+    #expect(snapshot.executed)
+    #expect(!snapshot.wasMainThread)
+}
+
+@Test func systemGlassSoundIDCreatesQuicklyWithoutPlayback() {
+    let url = URL(fileURLWithPath: "/System/Library/Sounds/Glass.aiff")
+    var soundID: SystemSoundID = 0
+    let start = DispatchTime.now()
+    let status = AudioServicesCreateSystemSoundID(url as CFURL, &soundID)
+    let elapsedMs = TextSnapLog.milliseconds(since: start)
+    defer {
+        if soundID != 0 {
+            AudioServicesDisposeSystemSoundID(soundID)
+        }
+    }
+    #expect(status == kAudioServicesNoError)
+    #expect(soundID != 0)
+    #expect(elapsedMs < 1_000)
+}
+
+@Test func permissionPreflightCacheOnlySkipsWhenGranted() {
+    #expect(CaptureEngine.shouldSkipPreflight(cachedGranted: true))
+    #expect(!CaptureEngine.shouldSkipPreflight(cachedGranted: false))
 }
 
 private func makeSyntheticDisplayP3Image(width: Int, height: Int, text: String) throws -> CGImage {
