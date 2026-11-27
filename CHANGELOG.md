@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.12
+
+### English
+
+- TextSnap is now NeatOCR. Update in place to keep your settings and permissions.
+
+### 简体中文
+
+- TextSnap 更名为 NeatOCR。原地更新可保留设置和权限。
+
 ## 0.2.11
 
 - Fix severe main-thread freezes when triggering shortcuts or copying recognition results: replace AppKit `NSSound` (which synchronously initialized CoreAudio HAL, AudioQueue, and virtual/Bluetooth audio routing on the main thread for up to ~15 seconds on macOS 27.3) with off-main `AudioToolbox` system sound playback (`systemsoundserverd`).

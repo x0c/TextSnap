@@ -24,13 +24,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "TextSnap: press a shortcut, box a region, text lands in the clipboard."
+            "value": "NeatOCR: press a shortcut, box a region, text lands in the clipboard."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "TextSnap：按快捷键框选屏幕，文字直接进入剪贴板。"
+            "value": "NeatOCR：按快捷键框选屏幕，文字直接进入剪贴板。"
           }
         }
       }
@@ -75,13 +75,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "TextSnap Settings"
+            "value": "NeatOCR Settings"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "TextSnap 设置"
+            "value": "NeatOCR 设置"
           }
         }
       }
@@ -92,13 +92,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "TextSnap: capture screen text"
+            "value": "NeatOCR: capture screen text"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "TextSnap：识别屏幕文字"
+            "value": "NeatOCR：识别屏幕文字"
           }
         }
       }
@@ -171,8 +171,8 @@
     "settings.menuBar.recoveryHint": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "To show it again, reopen TextSnap from Applications or Spotlight." } },
-        "zh-Hans": { "stringUnit": { "state": "translated", "value": "从“应用程序”或 Spotlight 再次打开 TextSnap，即可恢复显示。" } }
+        "en": { "stringUnit": { "state": "translated", "value": "To show it again, reopen NeatOCR from Applications or Spotlight." } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "从“应用程序”或 Spotlight 再次打开 NeatOCR，即可恢复显示。" } }
       }
     },
     "settings.menuBar.saveFailed.title": {
@@ -185,8 +185,8 @@
     "settings.menuBar.saveFailed.body": {
       "extractionState": "manual",
       "localizations": {
-        "en": { "stringUnit": { "state": "translated", "value": "Check that TextSnap can write to its configuration folder, then try again. The icon visibility has not changed." } },
-        "zh-Hans": { "stringUnit": { "state": "translated", "value": "请确认 TextSnap 可以写入配置文件夹后重试。图标显示状态未改变。" } }
+        "en": { "stringUnit": { "state": "translated", "value": "Check that NeatOCR can write to its configuration folder, then try again. The icon visibility has not changed." } },
+        "zh-Hans": { "stringUnit": { "state": "translated", "value": "请确认 NeatOCR 可以写入配置文件夹后重试。图标显示状态未改变。" } }
       }
     },
     "menu.checkForUpdates": {
@@ -229,13 +229,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "About TextSnap"
+            "value": "About NeatOCR"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "关于 TextSnap"
+            "value": "关于 NeatOCR"
           }
         }
       }
@@ -246,13 +246,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quit TextSnap"
+            "value": "Quit NeatOCR"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "退出 TextSnap"
+            "value": "退出 NeatOCR"
           }
         }
       }
@@ -518,13 +518,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "First capture asks once in a system dialog. If denied, allow TextSnap here and come back — it works right away. If you turned the switch off and back on, relaunch TextSnap first."
+            "value": "First capture asks once in a system dialog. If denied, allow NeatOCR here and come back — it works right away. If you turned the switch off and back on, relaunch NeatOCR first."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "首次识别会弹一次系统授权窗。若拒绝，在此允许 TextSnap 后回来即刻可用。若曾关闭后重新打开开关，需先重启 TextSnap。"
+            "value": "首次识别会弹一次系统授权窗。若拒绝，在此允许 NeatOCR 后回来即刻可用。若曾关闭后重新打开开关，需先重启 NeatOCR。"
           }
         }
       }
@@ -671,13 +671,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "TextSnap cannot see the region you select until you allow it under Privacy & Security → Screen & System Audio Recording."
+            "value": "NeatOCR cannot see the region you select until you allow it under Privacy & Security → Screen & System Audio Recording."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "在“隐私与安全性 → 屏幕与系统音频录制”里允许 TextSnap 之前，它看不到你框选的区域。"
+            "value": "在“隐私与安全性 → 屏幕与系统音频录制”里允许 NeatOCR 之前，它看不到你框选的区域。"
           }
         }
       }

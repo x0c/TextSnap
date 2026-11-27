@@ -2,7 +2,7 @@
 
 # NeatOCR
 
-Formerly **TextSnap**. The current installer still shows the previous name.
+Formerly **TextSnap**. Versions before 0.2.12 show the previous name. If you already have it installed, use Check for Updates in the app.
 
 <img src="docs/images/app-icon.png" width="96" height="96" alt="TextSnap blue glass quotation-mark icon">
 

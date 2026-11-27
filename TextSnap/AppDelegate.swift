@@ -194,7 +194,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func showAbout() {
         NSApp.activate(ignoringOtherApps: true)
         NSApp.orderFrontStandardAboutPanel(options: [
-            .applicationName: "TextSnap",
+            .applicationName: "NeatOCR",
             .credits: NSAttributedString(string: String(localized: "about.credits")),
         ])
     }

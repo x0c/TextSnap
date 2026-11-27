@@ -2,7 +2,7 @@
 
 # NeatOCR
 
-原名 **TextSnap**。目前的安装包仍显示旧名。
+原名 **TextSnap**。0.2.12 之前的版本仍显示旧名；已有安装可在应用内更新。
 
 <img src="docs/images/app-icon.png" width="96" height="96" alt="TextSnap 蓝色玻璃双引号图标">
 
