@@ -31,7 +31,7 @@ from datetime import datetime, timezone
 
 ROOT = Path(__file__).resolve().parent.parent
 PUBLISHER = ROOT / "scripts/publish-release.py"
-SLUG = "x0c/TextSnap"
+SLUG = "NeatMacApps/NeatOCR"
 
 
 def run(argv, **kwargs):

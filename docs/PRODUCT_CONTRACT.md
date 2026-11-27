@@ -2,6 +2,12 @@
 
 Read this before changing, reviewing, or troubleshooting capture, hotkey, OCR, clipboard, menu, Settings, app-icon artwork, or "Check for Updates".
 
+## NeatMacApps migration
+
+The public name is **NeatOCR** and the canonical GitHub repository is `NeatMacApps/NeatOCR` (formerly `x0c/TextSnap`). The repository and existing releases transfer together. The currently published binaries keep their original name until the first rebranded release.
+
+Preserve the bundle identifier, application bundle filename, signing keys, and user data paths so existing installations can upgrade in place. Keep the existing Sparkle Release-asset URL reachable for installed builds. Never recreate the old GitHub slug.
+
 ## One sentence
 
 Press a shortcut, drag a region on screen, the text in it lands in the clipboard.

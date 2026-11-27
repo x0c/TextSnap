@@ -1,13 +1,15 @@
 **语言：** [English](README.md) | 简体中文
 
-# TextSnap
+# NeatOCR
+
+原名 **TextSnap**。目前的安装包仍显示旧名。
 
 <img src="docs/images/app-icon.png" width="96" height="96" alt="TextSnap 蓝色玻璃双引号图标">
 
 按一下快捷键，在屏幕上框选一块区域，里面的文字就进入剪贴板。macOS 菜单栏识字工具，全程调用本机 Apple Vision —— 不留截图文件，不联网，不用账号。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Latest release](https://img.shields.io/github/v/release/x0c/TextSnap)](https://github.com/x0c/TextSnap/releases/latest)
+[![Latest release](https://img.shields.io/github/v/release/NeatMacApps/NeatOCR)](https://github.com/NeatMacApps/NeatOCR/releases/latest)
 ![macOS 26+](https://img.shields.io/badge/macOS-26%2B-black)
 
 > **仅支持 macOS。** TextSnap 依赖 macOS 专有能力（Vision、屏幕录制授权、菜单栏），没有 Windows / Linux 版。
@@ -30,7 +32,7 @@
 
 ## 安装
 
-从 [最新版本](https://github.com/x0c/TextSnap/releases/latest)下载已签名的 `.dmg`，打开后把 TextSnap 拖进 Applications，启动一次。首次启动是静默的 —— 去菜单栏找到 TextSnap，然后按 `⌘⇧2`。
+从 [最新版本](https://github.com/NeatMacApps/NeatOCR/releases/latest)下载已签名的 `.dmg`，打开后把 TextSnap 拖进 Applications，启动一次。首次启动是静默的 —— 去菜单栏找到 TextSnap，然后按 `⌘⇧2`。
 
 
 第一次按快捷键会申请屏幕录制权限；没有它，TextSnap 看不见你框选的区域。如果之前拒绝过，设置里可一键跳回系统设置打开。

@@ -1,13 +1,15 @@
 **Languages:** English | [简体中文](README.zh-CN.md)
 
-# TextSnap
+# NeatOCR
+
+Formerly **TextSnap**. The current installer still shows the previous name.
 
 <img src="docs/images/app-icon.png" width="96" height="96" alt="TextSnap blue glass quotation-mark icon">
 
 Press a shortcut, drag a region on screen, and the text in it lands in your clipboard. macOS menu-bar OCR powered entirely by on-device Apple Vision — no screenshots to manage, no cloud, no accounts.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Latest release](https://img.shields.io/github/v/release/x0c/TextSnap)](https://github.com/x0c/TextSnap/releases/latest)
+[![Latest release](https://img.shields.io/github/v/release/NeatMacApps/NeatOCR)](https://github.com/NeatMacApps/NeatOCR/releases/latest)
 ![macOS 26+](https://img.shields.io/badge/macOS-26%2B-black)
 
 > **macOS only.** TextSnap depends on macOS-only APIs (Vision, screen-capture permission, menu-bar extras) — there is no Windows or Linux version.
@@ -30,7 +32,7 @@ macOS 26 (Tahoe) and later, Apple silicon and Intel. No Windows or Linux version
 
 ## Install
 
-Download the signed `.dmg` from the [latest release](https://github.com/x0c/TextSnap/releases/latest), open it, drag TextSnap to Applications, and launch it once. First launch is silent — look for TextSnap in the menu bar, then press `⌘⇧2`.
+Download the signed `.dmg` from the [latest release](https://github.com/NeatMacApps/NeatOCR/releases/latest), open it, drag TextSnap to Applications, and launch it once. First launch is silent — look for TextSnap in the menu bar, then press `⌘⇧2`.
 
 
 Pressing the shortcut the first time asks for Screen Recording permission; without it TextSnap cannot see the region you select. If you denied it earlier, Settings offers a one-tap jump back to System Settings.

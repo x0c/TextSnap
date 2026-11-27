@@ -58,7 +58,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 APP_NAME = "TextSnap"
 BUNDLE_ID = "top.caozc.TextSnap"
-GITHUB_SLUG = "x0c/TextSnap"
+GITHUB_SLUG = "NeatMacApps/NeatOCR"
 SCHEME = "TextSnap"
 PROJECT = REPO_ROOT / "TextSnap.xcodeproj"
 
